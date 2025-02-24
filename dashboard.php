@@ -9,8 +9,8 @@ if (!isset($_SESSION["username"])) {
 include("db.php");
 $username = $_SESSION["username"];
 
-// Fetch the user's full name, course, and year level (using correct column names)
-$query = "SELECT CONCAT(FIRSTNAME, ' ', MIDNAME, ' ', LASTNAME) AS full_name, COURSE, YEARLEVEL FROM register WHERE USERNAME = ?";
+// Fetch user details including profile image
+$query = "SELECT CONCAT(FIRSTNAME, ' ', MIDNAME, ' ', LASTNAME) AS full_name, COURSE, YEARLEVEL, PROFILE_IMG FROM register WHERE USERNAME = ?";
 $stmt = mysqli_prepare($con, $query);
 mysqli_stmt_bind_param($stmt, "s", $username);
 mysqli_stmt_execute($stmt);
@@ -20,10 +20,12 @@ if ($row = mysqli_fetch_assoc($result)) {
     $fullname = $row["full_name"];
     $course = $row["COURSE"];
     $year = $row["YEARLEVEL"];
+    $profile_img = !empty($row["PROFILE_IMG"]) ? $row["PROFILE_IMG"] : "images/default.jpg"; // Use default if empty
 } else {
     $fullname = "User";
     $course = "Unknown";
     $year = "Unknown";
+    $profile_img = "images/default.jpg"; // Default profile image
 }
 ?>
 
@@ -32,13 +34,17 @@ if ($row = mysqli_fetch_assoc($result)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCS | Home</title>
+    <title>CCS | Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
+        }
+        td {
+            padding: 10px;
+            text-align: left;
         }
         .navbar {
             background-color: #144c94;
@@ -56,26 +62,25 @@ if ($row = mysqli_fetch_assoc($result)) {
             color: yellow;
         }
         .container {
-        display: flex;
-        justify-content: space-between; /* Ensures the items are spread apart */
-        align-items: stretch; /* Aligns them at the top */
-        padding: 20px;
-        gap: 20px; /* Space between student info and announcements */
-        flex-wrap: nowrap; /* Prevents wrapping */
+            display: flex;
+            justify-content: space-between; 
+            align-items: stretch;
+            padding: 20px;
+            gap: 20px;
+            flex-wrap: nowrap;
+            height: 80vh;
         }
-
         .card {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            width: 48%; /* Each card takes up 48% of the space */
+            width: 48%;
             text-align: center;
             flex-direction: column;
             justify-content: space-between;
+            flex-grow: 1;
         }
-
-        /* Media Query for small screens */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -85,15 +90,21 @@ if ($row = mysqli_fetch_assoc($result)) {
                 width: 100%;
             }
         }
-
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #144c94;
+        }
     </style>
 </head>
 <body>
     <div class="navbar">
         <a href="Homepage.php">Dashboard</a>
         <div>
-            <a href="Homepage.php">Home</a>
-            <a href="Profile.php">Edit Profile</a>
+            <a href="dashboard.php">Home</a>
+            <a href="profile.php">Edit Profile</a>
             <a href="history.php">History</a>
             <a href="Reservation.php">Reservation</a>
             <a href="../php/login.php" style="color: orange;">Log out</a>
@@ -104,7 +115,7 @@ if ($row = mysqli_fetch_assoc($result)) {
         <!-- Student Information -->
         <div class="card">
             <h3>Student Information</h3>
-            <img src="../../images/hutao.webp" alt="Profile Picture">
+            <img src="<?php echo htmlspecialchars($profile_img); ?>" alt="Profile Picture" class="profile-img">
             <table class="info-table">
                 <tr><td>Name:</td><td><?php echo htmlspecialchars($fullname); ?></td></tr>
                 <tr><td>Course:</td><td><?php echo htmlspecialchars($course); ?></td></tr>
