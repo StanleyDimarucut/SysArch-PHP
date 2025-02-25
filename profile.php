@@ -87,11 +87,11 @@ if ($row = mysqli_fetch_assoc($result)) {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color:rgb(230, 233, 241);
         }
         .navbar {
             background-color: #144c94;
-            padding: 10px;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -100,6 +100,7 @@ if ($row = mysqli_fetch_assoc($result)) {
             color: white;
             text-decoration: none;
             margin: 0 10px;
+            font-size: larger;
         }
         .navbar a:hover {
             color: yellow;
@@ -110,6 +111,7 @@ if ($row = mysqli_fetch_assoc($result)) {
             align-items: center;
             height: 80vh;
             flex-direction: column;
+            padding: 20px;
         }
         .card {
             background-color: white;
@@ -118,6 +120,7 @@ if ($row = mysqli_fetch_assoc($result)) {
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             width: 50%;
             text-align: center;
+            flex-grow: 1;
         }
         .profile-img {
             width: 150px;
