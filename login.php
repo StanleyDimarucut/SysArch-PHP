@@ -2,51 +2,67 @@
 session_start();
 include("db.php"); // Ensure this correctly connects to your database
 
+// Ensure the admin account exists
+$adminUsername = "admin";
+$adminPassword = "admin123"; // Default admin password
+$hashedAdminPassword = password_hash($adminPassword, PASSWORD_DEFAULT);
+
+// Check if admin exists
+$checkAdminQuery = "SELECT * FROM register WHERE USERNAME = ?";
+$stmt = mysqli_prepare($con, $checkAdminQuery);
+mysqli_stmt_bind_param($stmt, "s", $adminUsername);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+if (mysqli_num_rows($result) == 0) {
+    // Admin does not exist, create it
+    $insertAdminQuery = "INSERT INTO register (USERNAME, PASSWORD, LASTNAME, FIRSTNAME, MIDNAME, COURSE, YEARLEVEL) 
+                         VALUES (?, ?, 'Admin', 'Administrator', 'Admin', 'N/A', 'N/A')";
+    $stmt = mysqli_prepare($con, $insertAdminQuery);
+    mysqli_stmt_bind_param($stmt, "ss", $adminUsername, $hashedAdminPassword);
+    mysqli_stmt_execute($stmt);
+}
+
+// Handle Login Request
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Sanitize user input to prevent XSS
     $username = trim($_POST["username"]);
     $password = trim($_POST["password"]);
 
-    // Check if username and password are provided
     if (empty($username) || empty($password)) {
         header("Location: login.php?error=" . urlencode("Both fields are required."));
         exit();
     }
 
-    // Use prepared statement to prevent SQL injection
+    // Fetch user
     $query = "SELECT * FROM register WHERE USERNAME = ?";
     $stmt = mysqli_prepare($con, $query);
+    mysqli_stmt_bind_param($stmt, "s", $username);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "s", $username);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-
-        if ($row = mysqli_fetch_assoc($result)) {
-            // Debugging output (Uncomment for testing)
-            // echo "Stored Password (Hashed): " . $row["PASSWORD"] . "<br>";
-            // echo "Entered Password: " . $password . "<br>";
-
-            // Verify password using password_verify()
-            if (password_verify($password, $row["PASSWORD"])) {
-                $_SESSION["username"] = $username;
-                header("Location: dashboard.php"); // Redirect to dashboard
-                exit();
+    if ($row = mysqli_fetch_assoc($result)) {
+        if (password_verify($password, $row["PASSWORD"])) {
+            // Store session based on role
+            if ($username === "admin") {
+                $_SESSION["admin_username"] = $username;
+                echo "Login Successful! Redirecting...";
+                header("refresh:2; url=admin_dashboard.php"); // Redirect after 2 seconds
             } else {
-                header("Location: login.php?error=" . urlencode("Invalid username or password."));
-                exit();
+                $_SESSION["username"] = $username;
+                echo "Login Successful! Redirecting...";
+                header("refresh:2; url=dashboard.php"); // Redirect after 2 seconds
             }
+            exit();
         } else {
-            header("Location: login.php?error=" . urlencode("Invalid username or password."));
+            echo "Invalid password!";
             exit();
         }
     } else {
-        header("Location: login.php?error=" . urlencode("Database error. Try again later."));
+        echo "Invalid username!";
         exit();
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

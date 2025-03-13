@@ -9,6 +9,9 @@ if (!isset($_SESSION["username"])) {
 include("db.php");
 $username = $_SESSION["username"];
 
+$announcement_query = "SELECT title, content, date_posted FROM announcements ORDER BY date_posted DESC LIMIT 5";
+$announcement_result = mysqli_query($con, $announcement_query);
+
 // Fetch user details including profile image
 $query = "SELECT IDNO, CONCAT(FIRSTNAME, ' ', MIDNAME, ' ', LASTNAME) AS full_name, COURSE, YEARLEVEL, PROFILE_IMG FROM register WHERE USERNAME = ?";
 $stmt = mysqli_prepare($con, $query);
@@ -64,39 +67,76 @@ if ($row = mysqli_fetch_assoc($result)) {
             color: yellow;
         }
         .container {
-            display: flex;
-            justify-content: space-between; /* Aligns cards horizontally */
-            padding: 20px;
-            gap: 20px; /* Space between the cards */
-            flex-wrap: nowrap; /* Allows cards to wrap on smaller screens */
-        }
-        .card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            width: 48%; /* Cards will take 48% of the available space */
-            text-align: center;
-        }
-        .announcement-card, .rules-card {
-            width: 48%;
-        }
-        .rules-card {
-            overflow-y: auto;
-            max-height: 489px; /* Adjust the height as needed */
-        }
-        .rules-card, .p {
-            text-align: left;
-        }
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                align-items: center;
-            }
-            .card {
-                width: 100%; /* Full width on smaller screens */
-            }
-        }
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    gap: 25px; /* Increases space between cards */
+    flex-wrap: nowrap;
+    align-items: stretch; /* Makes all cards the same height */
+}
+
+/* General Card Styling */
+/* General Card Styling */
+.card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    flex-grow: 1;
+}
+
+/* Profile Card - Adjusted to Match Other Cards */
+.profile-card {
+    flex: 0 0 30%; /* Wider than before */
+    max-width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Announcement & Rules Cards - Same Width */
+.announcement-card,
+.rules-card {
+    flex: 0 0 35%;
+    max-width: 35%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure Consistent Heights & Scrollability */
+.announcement-list,
+.rules-list {
+    max-height: 400px;
+    overflow-y: auto;
+    text-align: left;
+    padding: 10px;
+    word-wrap: break-word;
+    flex-grow: 1;
+}
+
+/* Profile Image Styling */
+.profile-card img {
+    width: 100px; /* Adjust the size of the profile image */
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .container {
+        flex-wrap: wrap;
+    }
+
+    .profile-card,
+    .announcement-card,
+    .rules-card {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
         .profile-img {
             width: 120px; /* Reduce image size */
             height: 120px;
@@ -140,42 +180,50 @@ if ($row = mysqli_fetch_assoc($result)) {
         </div>
 
         <!-- Announcements and Rules Container -->
-        <div class="announcement-card card">
-            <h3>Announcement</h3>
-            <p><strong>CCS Admin | 2025-Feb-03</strong></p>
-            <p>Birthday BAHAN</p>
-            <hr>
-            <p><strong>CCS Admin | 2024-May-08</strong></p>
-            <p>Birthday Remart</p>
+        <div class="card announcement-card">
+            <h3>Recent Announcements</h3>
+            <div class="announcement-list">
+                <?php while ($announcement = mysqli_fetch_assoc($announcement_result)) { ?>
+                    <div class="announcement">
+                        <strong><?php echo htmlspecialchars($announcement["title"]); ?></strong>
+                        <small><?php echo date("Y-M-d", strtotime($announcement["date_posted"])); ?></small>
+                        <p><?php echo nl2br(htmlspecialchars($announcement["content"])); ?></p>
+                    </div>
+                <?php } ?>
+            </div>
         </div>
 
-        <div class="rules-card card">
-            <h3>Rules and Regulations</h3>
-            <p><strong>COLLEGE OF INFORMATION & COMPUTER STUDIES</strong></p>
-            <p>To avoid embarrassment and maintain camaraderie with your friends and superiors at our laboratories, please observe the following:</p>
-            <ol>
-                <p>Maintain silence, proper decorum, and discipline inside the laboratory. Mobile phones, walkmans and other personal pieces of equipment must be switched off.</p>
-                <p>Games are not allowed inside the lab. This includes computer-related games, card games and other games that may disturb the operation of the lab.</p>
-                <p>Surfing the Internet is allowed only with the permission of the instructor. Downloading and installing of software are strictly prohibited.</p>
-                <p>Getting access to other websites not related to the course (especially pornographic and illicit sites) is strictly prohibited.</p>
-                <p>Deleting computer files and changing the set-up of the computer is a major offense.</p>
-                <p>Observe computer time usage carefully. A fifteen-minute allowance is given for each use. Otherwise, the unit will be given to those who wish to "sit-in".</p>
-                <p>Observe proper decorum while inside the laboratory.</p>
-                <p>Do not get inside the lab unless the instructor is present.</p>
-                <p>All bags, knapsacks, and the likes must be deposited at the counter.</p>
-                <p>Follow the seating arrangement of your instructor.</p>
-                <p>At the end of class, all software programs must be closed.</p>
-                <p>Return all chairs to their proper places after using.</p>
-                <p>Chewing gum, eating, drinking, smoking, and other forms of vandalism are prohibited inside the lab.</p>
-                <p>Anyone causing a continual disturbance will be asked to leave the lab. Acts or gestures offensive to the members of the community, including public display of physical intimacy, are not tolerated.</p>
-                <p>Persons exhibiting hostile or threatening behavior such as yelling, swearing, or disregarding requests made by lab personnel will be asked to leave the lab.</p>
-                <p>For serious offenses, the lab personnel may call the Civil Security Office (CSU) for assistance.</p>
-                <p>Any technical problem or difficulty must be addressed to the laboratory supervisor, student assistant or instructor immediately.</p>
-            </ol>
-            <p><strong>DISCIPLINARY ACTION</strong></p>
-            <p>First Offense - The Head or the Dean or OIC recommends to the Guidance Center for a suspension from classes for each offender.</p>
-            <p>Second and Subsequent Offenses - A recommendation for a heavier sanction will be endorsed to the Guidance Center.</p>
-        </div>
+        <!-- Rules & Regulations Card -->
+<div class="card rules-card">
+    <h3>Rules and Regulations</h3>
+    <div class="rules-list">
+        <p><strong>COLLEGE OF INFORMATION & COMPUTER STUDIES</strong></p>
+        <p>To avoid embarrassment and maintain camaraderie with your friends and superiors at our laboratories, please observe the following:</p>
+        <ol>
+            <li>Maintain silence, proper decorum, and discipline inside the laboratory. Mobile phones, walkmans, and other personal equipment must be switched off.</li>
+            <li>Games are not allowed inside the lab. This includes computer-related games, card games, and other games that may disturb the operation of the lab.</li>
+            <li>Surfing the Internet is allowed only with the permission of the instructor. Downloading and installing software are strictly prohibited.</li>
+            <li>Getting access to websites not related to the course (especially pornographic and illicit sites) is strictly prohibited.</li>
+            <li>Deleting computer files and changing the computer's setup is a major offense.</li>
+            <li>Observe computer time usage carefully. A fifteen-minute allowance is given for each use; otherwise, the unit will be given to those who wish to "sit in".</li>
+            <li>Do not enter the lab unless the instructor is present.</li>
+            <li>All bags and knapsacks must be deposited at the counter.</li>
+            <li>Follow the seating arrangement of your instructor.</li>
+            <li>At the end of class, all software programs must be closed.</li>
+            <li>Return all chairs to their proper places after use.</li>
+            <li>Chewing gum, eating, drinking, smoking, and vandalism are prohibited inside the lab.</li>
+            <li>Anyone causing a disturbance will be asked to leave the lab.</li>
+            <li>Persons exhibiting hostile or threatening behavior (yelling, swearing, etc.) will be removed.</li>
+            <li>For serious offenses, lab personnel may call security for assistance.</li>
+            <li>Any technical issues must be reported to the lab supervisor, student assistant, or instructor immediately.</li>
+        </ol>
+
+        <p><strong>DISCIPLINARY ACTION</strong></p>
+        <p><strong>First Offense:</strong> The Head, Dean, or OIC recommends suspension from classes.</p>
+        <p><strong>Second & Subsequent Offenses:</strong> A recommendation for heavier sanctions will be endorsed to the Guidance Center.</p>
+    </div>
+</div>
+
     </div>
 
     <script>
