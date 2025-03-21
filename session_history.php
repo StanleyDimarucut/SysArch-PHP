@@ -10,25 +10,13 @@ include("db.php");
 // Get the selected date (default to today)
 $selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
-// Get all session history with student details
-$history_query = "SELECT 
-    s.id,
-    s.student_id,
-    CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name,
-    s.purpose,
-    s.lab,
-    DATE_FORMAT(s.time_in, '%l:%i %p') as time_in,
-    COALESCE(DATE_FORMAT(s.time_out, '%l:%i %p'), '-') as time_out,
-    s.date
-FROM sit_in_records s
-JOIN register r ON s.student_id = r.IDNO
-WHERE s.date = ?
-ORDER BY s.time_in DESC";
+// Query to get session history with student details
+$query = "SELECT s.*, CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name 
+          FROM sit_in_records s 
+          JOIN register r ON s.student_id = r.IDNO 
+          ORDER BY s.date DESC, s.time_in DESC";
 
-$stmt = mysqli_prepare($con, $history_query);
-mysqli_stmt_bind_param($stmt, "s", $selected_date);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
+$result = mysqli_query($con, $query);
 ?>
 
 <!DOCTYPE html>
@@ -148,7 +136,8 @@ $result = mysqli_stmt_get_result($stmt);
     <div class="navbar">
         <a href="admin_dashboard.php">College of Computer Studies Admin</a>
         <div>
-            <a href="announcement.php">Create Announcements</a>
+            <a href="announcement.php">Announcements</a>
+            <a href="student_list.php">View Student List</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>

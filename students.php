@@ -44,17 +44,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["sitin_submit"])) {
     $student_id = $_POST["id_number"];
     $purpose = $_POST["purpose"];
     $lab = $_POST["lab"];
-    $remaining_session = $_POST["remaining_session"];
     $date = date('Y-m-d');
     
-    // Always insert a new record
-    $insert_query = "INSERT INTO sit_in_records (student_id, status, date, purpose, lab, remaining_session, time_in) 
-                    VALUES (?, 'present', ?, ?, ?, ?, CURRENT_TIME())";
-    $insert_stmt = mysqli_prepare($con, $insert_query);
-    mysqli_stmt_bind_param($insert_stmt, "ssssi", $student_id, $date, $purpose, $lab, $remaining_session);
-    mysqli_stmt_execute($insert_stmt);
+    // Check if student has remaining sessions
+    $sessions_query = "SELECT remaining_sessions FROM register WHERE IDNO = ?";
+    $sessions_stmt = mysqli_prepare($con, $sessions_query);
+    mysqli_stmt_bind_param($sessions_stmt, "s", $student_id);
+    mysqli_stmt_execute($sessions_stmt);
+    $sessions_result = mysqli_stmt_get_result($sessions_stmt);
+    $sessions_row = mysqli_fetch_assoc($sessions_result);
     
-    header("Location: students.php");
+    if ($sessions_row['remaining_sessions'] <= 0) {
+        header("Location: students.php?error=No remaining sessions available");
+        exit();
+    }
+
+    // Check if student already has a session today
+    $check_session = "SELECT * FROM sit_in_records WHERE student_id = ? AND date = CURDATE() AND time_out IS NULL";
+    $check_stmt = mysqli_prepare($con, $check_session);
+    mysqli_stmt_bind_param($check_stmt, "s", $student_id);
+    mysqli_stmt_execute($check_stmt);
+    $check_result = mysqli_stmt_get_result($check_stmt);
+
+    if (mysqli_num_rows($check_result) > 0) {
+        header("Location: students.php?error=Student already has an active session today");
+        exit();
+    }
+
+    // Insert sit-in record with current time
+    $insert_query = "INSERT INTO sit_in_records (student_id, date, purpose, lab, time_in) 
+                    VALUES (?, ?, ?, ?, CURRENT_TIME())";
+    $insert_stmt = mysqli_prepare($con, $insert_query);
+    mysqli_stmt_bind_param($insert_stmt, "ssss", $student_id, $date, $purpose, $lab);
+    
+    if (mysqli_stmt_execute($insert_stmt)) {
+        header("Location: students.php?success=Student successfully logged in");
+    } else {
+        header("Location: students.php?error=Failed to create sit-in record");
+    }
     exit();
 }
 
@@ -62,17 +89,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["sitin_submit"])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_sessions"])) {
     $student_id = $_POST["student_id"];
     
-    // Update the sessions back to 30
-    $reset_query = "UPDATE sit_in_records 
-                    SET total_sessions = 30,
-                        remaining_session = 30 
-                    WHERE student_id = ? 
-                    AND date = CURDATE()";
+    // Reset sessions back to 30
+    $reset_query = "UPDATE register SET remaining_sessions = 30 WHERE IDNO = ?";
     $reset_stmt = mysqli_prepare($con, $reset_query);
     mysqli_stmt_bind_param($reset_stmt, "s", $student_id);
     mysqli_stmt_execute($reset_stmt);
     
-    header("Location: students.php");
+    header("Location: students.php?success=Sessions reset successfully");
     exit();
 }
 
@@ -81,11 +104,11 @@ $total_students_query = "SELECT COUNT(*) as total FROM register WHERE USERNAME !
 $total_result = mysqli_query($con, $total_students_query);
 $total_students = mysqli_fetch_assoc($total_result)['total'];
 
-$current_sitin_query = "SELECT COUNT(*) as current FROM sit_in_records WHERE date = CURDATE() AND status = 'present'";
+$current_sitin_query = "SELECT COUNT(*) as current FROM sit_in_records WHERE date = CURDATE() AND time_in IS NOT NULL AND time_out IS NULL";
 $current_result = mysqli_query($con, $current_sitin_query);
 $current_sitin = mysqli_fetch_assoc($current_result)['current'];
 
-$total_sitin_query = "SELECT COUNT(DISTINCT student_id) as total FROM sit_in_records WHERE status = 'present'";
+$total_sitin_query = "SELECT COUNT(*) as total FROM sit_in_records WHERE time_out IS NOT NULL";
 $total_sitin_result = mysqli_query($con, $total_sitin_query);
 $total_sitin = mysqli_fetch_assoc($total_sitin_result)['total'];
 
@@ -100,12 +123,14 @@ while($row = mysqli_fetch_assoc($course_stats_result)) {
     $course_counts[] = $row['count'];
 }
 
-// Modify search query to get full student details
+// Initialize variables
 $search_query = "";
 $search_result = null;
+
+// Modify search query to get full student details
 if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
     $search_query = trim($_GET["search"]);
-    $search_sql = "SELECT * FROM register WHERE USERNAME != 'admin' AND IDNO LIKE ?";
+    $search_sql = "SELECT *, remaining_sessions FROM register WHERE USERNAME != 'admin' AND IDNO LIKE ?";
     $search_stmt = mysqli_prepare($con, $search_sql);
     $search_param = "%$search_query%";
     mysqli_stmt_bind_param($search_stmt, "s", $search_param);
@@ -426,7 +451,8 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
     <div class="navbar">
         <a href="admin_dashboard.php">Admin Dashboard</a>
         <div>
-            <a href="announcement.php">Create Announcements</a>
+            <a href="announcement.php">Announcements</a>
+            <a href="student_list.php">View Student List</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
@@ -453,49 +479,31 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
         <div style="text-align: center; margin: 20px 0;">
             <button class="btn-modal" onclick="openModal()">Search Student for Sit-in</button>
         </div>
-
-        <div class="table-container">
-            <h3>Registered Students</h3>
-            <input type="text" id="studentFilter" class="search-box" onkeyup="filterStudents()" placeholder="Search students...">
-            <table id="studentsTable">
-                <thead>
-                    <tr>
-                        <th>ID Number</th>
-                        <th>Name</th>
-                        <th>Course</th>
-                        <th>Year Level</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $students_query = "SELECT IDNO, FIRSTNAME, LASTNAME, COURSE, YEARLEVEL FROM register WHERE USERNAME != 'admin' ORDER BY LASTNAME";
-                    $students_result = mysqli_query($con, $students_query);
-                    while ($student = mysqli_fetch_assoc($students_result)) {
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($student['IDNO']) . "</td>";
-                        echo "<td>" . htmlspecialchars($student['FIRSTNAME'] . ' ' . $student['LASTNAME']) . "</td>";
-                        echo "<td>" . htmlspecialchars($student['COURSE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($student['YEARLEVEL']) . "</td>";
-                        echo "</tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
-        </div>
     </div>
 
     <!-- Search Modal -->
-    <div id="searchModal" class="modal">
+    <div id="searchModal" class="modal" style="display: <?php echo isset($_GET['search']) ? 'flex' : 'none'; ?>">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
-            <h3>Search Student</h3>
-            <form method="GET">
-                <input type="text" name="search" class="search-box" placeholder="Search ID Number..." value="<?php echo htmlspecialchars($search_query); ?>">
-                <button type="submit" class="btn-search">Search</button>
-            </form>
-            
-            <?php if ($search_result && mysqli_num_rows($search_result) > 0): ?>
-                <?php $student = mysqli_fetch_assoc($search_result); ?>
+            <?php if (!isset($search_result) || !$search_result || mysqli_num_rows($search_result) == 0): ?>
+                <h3>Search Student</h3>
+                <form method="GET">
+                    <input type="text" name="search" class="search-box" placeholder="Search ID Number..." value="<?php echo htmlspecialchars($search_query); ?>">
+                    <button type="submit" class="btn-search">Search</button>
+                </form>
+                <?php if (isset($_GET["search"])): ?>
+                    <p>No student found with that ID number.</p>
+                <?php endif; ?>
+            <?php else: ?>
+                <?php 
+                $student = mysqli_fetch_assoc($search_result);
+                // Check if student has an active session today
+                $session_check = "SELECT * FROM sit_in_records WHERE student_id = ? AND date = CURDATE() AND time_out IS NULL";
+                $session_stmt = mysqli_prepare($con, $session_check);
+                mysqli_stmt_bind_param($session_stmt, "s", $student['IDNO']);
+                mysqli_stmt_execute($session_stmt);
+                $session_result = mysqli_stmt_get_result($session_stmt);
+                ?>
                 <div class="sitin-form">
                     <h4>Sit In Form</h4>
                     <form method="POST">
@@ -508,32 +516,48 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                             <input type="text" value="<?php echo htmlspecialchars($student['FIRSTNAME'] . ' ' . $student['LASTNAME']); ?>" readonly>
                         </div>
                         <div class="form-group">
-                            <label>Purpose:</label>
-                            <select name="purpose" required>
-                                <option value="">Select Purpose</option>
-                                <option value="Programming">Programming</option>
-                                <option value="Research">Research</option>
-                                <option value="Assignment">Assignment</option>
-                                <option value="Project">Project</option>
-                            </select>
+                            <label>Remaining Sessions:</label>
+                            <input type="text" value="<?php echo htmlspecialchars($student['remaining_sessions']); ?>" readonly>
+                            <?php if ($student['remaining_sessions'] <= 0): ?>
+                                <small style="color: red; display: block; margin-top: 5px;">No sessions remaining</small>
+                            <?php endif; ?>
                         </div>
                         <div class="form-group">
-                            <label>Lab:</label>
-                            <select name="lab" required>
-                                <option value="">Select Lab</option>
-                                <option value="524">524</option>
-                                <option value="525">525</option>
-                                <option value="526">526</option>
-                            </select>
+                            <label>Session Status:</label>
+                            <?php if (mysqli_num_rows($session_result) > 0): ?>
+                                <input type="text" value="Already has an active session today" readonly style="color: red;">
+                            <?php elseif ($student['remaining_sessions'] <= 0): ?>
+                                <input type="text" value="No sessions remaining" readonly style="color: red;">
+                            <?php else: ?>
+                                <input type="text" value="Available for session" readonly style="color: green;">
+                            <?php endif; ?>
                         </div>
-                        <div class="form-group">
-                            <label>Remaining Session:</label>
-                            <input type="number" name="remaining_session" min="1" max="30" value="30" required>
-                            <small style="color: #666; display: block; margin-top: 5px;">Maximum 30 sessions allowed</small>
-                        </div>
+                        <?php if ($student['remaining_sessions'] > 0 && mysqli_num_rows($session_result) == 0): ?>
+                            <div class="form-group">
+                                <label>Purpose:</label>
+                                <select name="purpose" required>
+                                    <option value="">Select Purpose</option>
+                                    <option value="Programming">Programming</option>
+                                    <option value="Research">Research</option>
+                                    <option value="Assignment">Assignment</option>
+                                    <option value="Project">Project</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Lab:</label>
+                                <select name="lab" required>
+                                    <option value="">Select Lab</option>
+                                    <option value="524">524</option>
+                                    <option value="525">525</option>
+                                    <option value="526">526</option>
+                                </select>
+                            </div>
+                        <?php endif; ?>
                         <div class="btn-container">
                             <button type="button" class="btn-close" onclick="closeModal()">Close</button>
-                            <button type="submit" name="sitin_submit" class="btn-sitin">Sit In</button>
+                            <?php if ($student['remaining_sessions'] > 0 && mysqli_num_rows($session_result) == 0): ?>
+                                <button type="submit" name="sitin_submit" class="btn-sitin">Sit In</button>
+                            <?php endif; ?>
                         </div>
                     </form>
                     
@@ -545,8 +569,6 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                         </button>
                     </form>
                 </div>
-            <?php elseif (isset($_GET["search"])): ?>
-                <p>No student found with that ID number.</p>
             <?php endif; ?>
         </div>
     </div>
@@ -577,19 +599,36 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
 
         function openModal() {
             document.getElementById("searchModal").style.display = "flex";
+            // Clear any existing search results
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search')) {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
         }
 
         function closeModal() {
             document.getElementById("searchModal").style.display = "none";
+            // Clear any existing search results
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search')) {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
         }
 
         // Close modal when clicking outside
         window.onclick = function(event) {
             var modal = document.getElementById("searchModal");
             if (event.target === modal) {
-                modal.style.display = "none";
+                closeModal();
             }
         }
+
+        // Show error message if present
+        <?php if (isset($_GET["error"])): ?>
+        window.onload = function() {
+            alert("<?php echo htmlspecialchars($_GET["error"]); ?>");
+        }
+        <?php endif; ?>
     </script>
 
 </body>

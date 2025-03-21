@@ -8,35 +8,66 @@ if (!isset($_SESSION["admin_username"])) {
 // Connect to the database
 include("db.php");
 
-// Handle session end (time out)
+// Query to get active sit-in records with student details
+$query = "SELECT s.*, CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name 
+          FROM sit_in_records s 
+          JOIN register r ON s.student_id = r.IDNO 
+          WHERE s.date = CURDATE() 
+          AND s.time_out IS NULL 
+          ORDER BY s.time_in DESC";
+
+$result = mysqli_query($con, $query);
+
+// Handle end session
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["end_session"])) {
     $student_id = $_POST["student_id"];
-    $record_id = $_POST["record_id"];
     
-    // Get current remaining sessions
-    $session_query = "SELECT remaining_session FROM sit_in_records WHERE id = ? AND student_id = ?";
-    $session_stmt = mysqli_prepare($con, $session_query);
-    mysqli_stmt_bind_param($session_stmt, "is", $record_id, $student_id);
-    mysqli_stmt_execute($session_stmt);
-    $session_result = mysqli_stmt_get_result($session_stmt);
-    $session_data = mysqli_fetch_assoc($session_result);
+    // Start transaction
+    mysqli_begin_transaction($con);
     
-    if ($session_data) {
-        $new_remaining = max(0, $session_data['remaining_session'] - 1);
-        
-        // Update the record with time_out and deduct one session
+    try {
+        // Update time_out in sit_in_records
         $update_query = "UPDATE sit_in_records 
-                        SET time_out = CURRENT_TIME(),
-                            remaining_session = ?,
-                            status = 'absent'
-                        WHERE id = ? AND student_id = ?";
-        $update_stmt = mysqli_prepare($con, $update_query);
-        mysqli_stmt_bind_param($update_stmt, "iis", $new_remaining, $record_id, $student_id);
-        mysqli_stmt_execute($update_stmt);
+                        SET time_out = CURRENT_TIME()
+                        WHERE student_id = ? 
+                        AND date = CURDATE() 
+                        AND time_out IS NULL";
+        
+        $stmt = mysqli_prepare($con, $update_query);
+        mysqli_stmt_bind_param($stmt, "s", $student_id);
+        $result = mysqli_stmt_execute($stmt);
+        
+        if (!$result) {
+            throw new Exception("Failed to update session status");
+        }
+
+        // Deduct one session from remaining_sessions
+        $update_sessions = "UPDATE register 
+                          SET remaining_sessions = remaining_sessions - 1 
+                          WHERE IDNO = ? 
+                          AND remaining_sessions > 0";
+        $session_stmt = mysqli_prepare($con, $update_sessions);
+        mysqli_stmt_bind_param($session_stmt, "s", $student_id);
+        $session_result = mysqli_stmt_execute($session_stmt);
+        
+        if (!$session_result) {
+            throw new Exception("Failed to update remaining sessions");
+        }
+
+        // Commit transaction
+        mysqli_commit($con);
+        
+        // Redirect with success message
+        header("Location: sitin_view.php?success=Session ended successfully");
+        exit();
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        mysqli_rollback($con);
+        
+        // Redirect with error message
+        header("Location: sitin_view.php?error=" . urlencode($e->getMessage()));
+        exit();
     }
-    
-    header("Location: sitin_view.php");
-    exit();
 }
 
 // Get current active sessions
@@ -47,12 +78,11 @@ $active_sessions_query = "SELECT
     s.purpose,
     s.lab,
     DATE_FORMAT(s.time_in, '%l:%i %p') as time_in,
-    s.remaining_session,
+    r.remaining_sessions,
     s.date
 FROM sit_in_records s
 JOIN register r ON s.student_id = r.IDNO
 WHERE s.date = CURDATE() 
-AND s.status = 'present'
 AND s.time_out IS NULL
 ORDER BY s.time_in DESC";
 
@@ -113,6 +143,33 @@ $result = mysqli_query($con, $active_sessions_query);
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        .filter-box {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            width: 200px;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
         .btn-end-session {
             background-color: #dc3545;
             color: white;
@@ -124,20 +181,14 @@ $result = mysqli_query($con, $active_sessions_query);
         .btn-end-session:hover {
             background-color: #c82333;
         }
-        .filter-box {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            width: 200px;
-        }
     </style>
 </head>
 <body>
     <div class="navbar">
         <a href="admin_dashboard.php">College of Computer Studies Admin</a>
         <div>
-            <a href="announcement.php">Create Announcements</a>
+            <a href="announcement.php">Announcements</a>
+            <a href="student_list.php">View Student List</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
@@ -147,6 +198,18 @@ $result = mysqli_query($con, $active_sessions_query);
 
     <div class="container">
         <h2>Current Active Sessions</h2>
+        
+        <?php if (isset($_GET["error"])): ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($_GET["error"]); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET["success"])): ?>
+            <div class="alert alert-success">
+                <?php echo htmlspecialchars($_GET["success"]); ?>
+            </div>
+        <?php endif; ?>
         
         <input type="text" class="filter-box" id="filterInput" placeholder="Filter..." onkeyup="filterTable()">
 
@@ -170,11 +233,10 @@ $result = mysqli_query($con, $active_sessions_query);
                         <td><?php echo htmlspecialchars($row['purpose']); ?></td>
                         <td><?php echo htmlspecialchars($row['lab']); ?></td>
                         <td><?php echo htmlspecialchars($row['time_in']); ?></td>
-                        <td><?php echo htmlspecialchars($row['remaining_session']); ?></td>
+                        <td><?php echo htmlspecialchars($row['remaining_sessions']); ?></td>
                         <td>
-                            <form method="POST" style="display: inline;">
+                            <form method="POST">
                                 <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($row['student_id']); ?>">
-                                <input type="hidden" name="record_id" value="<?php echo htmlspecialchars($row['id']); ?>">
                                 <button type="submit" name="end_session" class="btn-end-session">End Session</button>
                             </form>
                         </td>

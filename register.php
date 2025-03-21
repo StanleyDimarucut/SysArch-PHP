@@ -47,40 +47,172 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML Registration Form</title>
-    <link rel="stylesheet" href="style.css">   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCS | Registration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .main2 {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h2 {
+            color: #144c94;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #144c94;
+        }
+
+        button {
+            width: 100%;
+            background-color: #144c94;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: #0d3a7d;
+        }
+
+        .login-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: #144c94;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main2 {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="main2">
-        <h2>Registration Form</h2>
+        <h2>Student Registration</h2>
         <form method="POST">
-            <label for="idno">ID No:</label>
-            <input type="text" id="idno" name="idno" required />
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="idno">ID Number</label>
+                    <input type="text" id="idno" name="idno" required>
+                </div>
 
-            <label for="last">Last Name:</label>
-            <input type="text" id="lastname" name="lastname" required />
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
 
-            <label for="first">First Name:</label>
-            <input type="text" id="firstname" name="firstname" required />
+                <div class="form-group">
+                    <label for="firstname">First Name</label>
+                    <input type="text" id="firstname" name="firstname" required>
+                </div>
 
-            <label for="middle">Middle Name:</label>
-            <input type="text" id="midname" name="midname" required />
+                <div class="form-group">
+                    <label for="midname">Middle Name</label>
+                    <input type="text" id="midname" name="midname" required>
+                </div>
 
-            <label for="course">Course:</label>
-            <input type="text" id="course" name="course" required />
+                <div class="form-group">
+                    <label for="lastname">Last Name</label>
+                    <input type="text" id="lastname" name="lastname" required>
+                </div>
 
-            <label for="yearlevel">Year Level:</label>
-            <input type="text" id="yearlvl" name="yearlvl" required />
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <input type="text" id="course" name="course" required>
+                </div>
 
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required />
+                <div class="form-group">
+                    <label for="yearlvl">Year Level</label>
+                    <input type="text" id="yearlvl" name="yearlvl" required>
+                </div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required />
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+            </div>
 
             <button type="submit">Register</button>
+            <a href="login.php" class="login-link">Already have an account? Login here</a>
         </form>
     </div>
 </body>

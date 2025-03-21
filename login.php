@@ -68,28 +68,166 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="style.css">
+    <title>CCS | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-container img {
+            margin: 0 10px;
+            height: 80px;
+            width: auto;
+        }
+
+        h1 {
+            color: #144c94;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #ffe5e7;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #144c94;
+        }
+
+        .wrap {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            flex: 1;
+            background-color: #144c94;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0d3a7d;
+        }
+
+        .register-link {
+            flex: 1;
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 0.75rem;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .register-link:hover {
+            background-color: #218838;
+        }
+
+        @media (max-width: 480px) {
+            .main {
+                padding: 1.5rem;
+            }
+
+            .wrap {
+                flex-direction: column;
+            }
+
+            .logo-container img {
+                height: 60px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="main">
-        <img src="uclogo.jpg" alt="uclogo" style="width: 150px;">
-        <img src="css.png" alt="css" style="width: 130px;">
+        <div class="logo-container">
+            <img src="uclogo.jpg" alt="UC Logo">
+            <img src="css.png" alt="CSS Logo">
+        </div>
         <h1>CCS Sitin Monitoring System</h1>
 
-        <!-- Display error message if exists -->
-        <?php
-        if (isset($_GET['error'])) {
-            echo "<p style='color: red;'>" . htmlspecialchars($_GET['error']) . "</p>";
-        }
-        ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="error-message">
+                <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
 
         <form action="login.php" method="POST">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" placeholder="Enter your Username" required>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="Enter your Password" required>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
 
             <div class="wrap">
                 <button type="submit">Login</button>
