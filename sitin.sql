@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 21, 2025 at 04:48 PM
+-- Generation Time: Mar 25, 2025 at 05:51 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,7 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`id`, `title`, `content`, `admin_username`, `date_posted`) VALUES
-(1, 'testing announcement 1', 'Bayot bahan', 'admin', '2025-03-13 15:58:21'),
+(1, 'testing announcement 1', 'BOOM', 'admin', '2025-03-13 15:58:21'),
 (2, 'testing 2', 'Edited', 'admin', '2025-03-13 16:02:39');
 
 -- --------------------------------------------------------
@@ -69,7 +69,9 @@ CREATE TABLE `register` (
 INSERT INTO `register` (`IDNO`, `LASTNAME`, `FIRSTNAME`, `MIDNAME`, `COURSE`, `YEARLEVEL`, `USERNAME`, `PASSWORD`, `PROFILE_IMG`, `remaining_sessions`) VALUES
 (0, 'Admin', 'Administrator', 'Admin', 'N/A', 0, 'admin', '$2y$10$lrq8Ta0sFCMKawbd9oOQu..QzoA06czmRyFyY.uJSzlojpbVfCwyC', NULL, 30),
 (20207742, 'Dimarucut', 'James Stanley', 'Jo', 'BSIT', 3, 'stanleyjo755', '$2y$10$6nopCRIbznPx5sV3YCv24./GQrWJCBWcgPh7rbF/AFJ8ykbMdQEcO', NULL, 29),
-(20208892, 'Testing', 'Number', 'One ', 'BSIT', 1, 'testing', '$2y$10$oahNkN1XDn.D54zWEncG..4a1F00scXI9NpianIzrOXNQNmMcHKIi', NULL, 30);
+(20208892, 'Testing', 'Number', 'One ', 'BSIT', 1, 'testing', '$2y$10$oahNkN1XDn.D54zWEncG..4a1F00scXI9NpianIzrOXNQNmMcHKIi', NULL, 30),
+(22651798, 'Bustillo', 'Jarom', 'M', 'BSIT', 3, 'jarom', '$2y$10$vViJB9.2Jw68OgK/WkSPoeV8i9YgNNHoagnni1LHNjwD4Kw44GOXi', NULL, 29),
+(202025837, 'Solon', 'Jhon Richmon', 'Alforque', 'BSIT', 3, 'rtsmn', '$2y$10$tXSBcbaBodbmyxh0uXxFAezHnHhko7Kr//BL1KA1uBs5XjhJL4TKK', NULL, 29);
 
 -- --------------------------------------------------------
 
@@ -97,7 +99,9 @@ INSERT INTO `sit_in_records` (`id`, `student_id`, `status`, `date`, `purpose`, `
 (7, '20208892', 'absent', '2025-03-19', 'Programming', '524', '21:58:25', '21:58:36'),
 (8, '20207742', 'present', '2025-03-21', 'Programming', '524', '23:18:29', '23:22:09'),
 (9, '20207742', 'present', '2025-03-21', 'Programming', '524', '23:23:36', '23:23:39'),
-(10, '20207742', 'absent', '2025-03-21', 'Programming', '524', '23:39:41', '23:39:49');
+(10, '20207742', 'absent', '2025-03-21', 'Programming', '524', '23:39:41', '23:39:49'),
+(11, '202025837', 'absent', '2025-03-25', 'Programming', '524', '12:09:01', '12:09:20'),
+(12, '22651798', 'absent', '2025-03-25', 'Programming', '524', '12:29:15', '12:32:33');
 
 --
 -- Indexes for dumped tables
@@ -135,7 +139,7 @@ ALTER TABLE `announcements`
 -- AUTO_INCREMENT for table `sit_in_records`
 --
 ALTER TABLE `sit_in_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
