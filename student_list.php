@@ -93,7 +93,7 @@ include("db.php");
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
-            <a href="../php/login.php" style="color: orange;">Log out</a>
+            <a href="login.php" style="color: orange;">Log out</a>
         </div>
     </div>
 
