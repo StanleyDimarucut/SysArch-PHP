@@ -537,10 +537,10 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                                 <label>Purpose:</label>
                                 <select name="purpose" required>
                                     <option value="">Select Purpose</option>
-                                    <option value="Programming">Programming</option>
-                                    <option value="Research">Research</option>
-                                    <option value="Assignment">Assignment</option>
-                                    <option value="Project">Project</option>
+                                    <option value="C#">C#</option>
+                                    <option value="PHP">PHP</option>
+                                    <option value="Java">Java</option>
+                                    <option value="HTML">HTML</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -548,8 +548,8 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                                 <select name="lab" required>
                                     <option value="">Select Lab</option>
                                     <option value="524">524</option>
-                                    <option value="525">525</option>
                                     <option value="526">526</option>
+                                    <option value="528">528</option>
                                 </select>
                             </div>
                         <?php endif; ?>

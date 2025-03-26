@@ -78,92 +78,71 @@ $result = mysqli_query($con, $query);
         }
 
         body {
-            background-color: #f0f2f5;
+            background-color: rgb(230, 233, 241);
             margin: 0;
             padding: 0;
         }
 
         .navbar {
             background-color: #144c94;
-            padding: 1rem 2rem;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
         }
 
         .navbar a {
             color: white;
             text-decoration: none;
             margin: 0 15px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: color 0.3s ease;
+            font-size: 18px;
         }
 
         .navbar a:hover {
-            color: #ffd700;
+            color: yellow;
         }
 
-        .main-container {
-            margin-top: 80px;
-            padding: 2rem;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .dashboard-header {
-            margin-bottom: 2rem;
-        }
-
-        .dashboard-header h1 {
-            color: #1a1a1a;
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+        .container {
+            width: 80%;
+            margin: 30px auto;
         }
 
         .card {
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
 
         .card h2 {
-            color: #1a1a1a;
+            color: #144c94;
             font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
             border-bottom: 2px solid #f0f2f5;
         }
 
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
             color: #666;
             font-size: 0.9rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
             font-weight: 500;
         }
 
         input, textarea {
             width: 100%;
-            padding: 0.75rem;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.95rem;
+            border-radius: 4px;
+            font-size: 14px;
             transition: border-color 0.3s ease;
         }
 
@@ -180,10 +159,10 @@ $result = mysqli_query($con, $query);
         .btn-submit {
             background-color: #144c94;
             color: white;
-            padding: 0.75rem 1.5rem;
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
-            font-size: 1rem;
+            border-radius: 4px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
@@ -194,30 +173,25 @@ $result = mysqli_query($con, $query);
         }
 
         .announcement {
-            padding: 1.5rem;
+            padding: 15px;
             background: #f8f9fa;
-            margin-bottom: 1rem;
+            margin-bottom: 15px;
             border-radius: 8px;
             border-left: 4px solid #144c94;
-            transition: transform 0.2s ease;
-        }
-
-        .announcement:hover {
-            transform: translateX(5px);
         }
 
         .announcement strong {
             display: block;
             font-size: 1.1rem;
             color: #1a1a1a;
-            margin-bottom: 0.5rem;
+            margin-bottom: 5px;
         }
 
         .announcement small {
             display: block;
             font-size: 0.85rem;
             color: #666;
-            margin-bottom: 0.75rem;
+            margin-bottom: 10px;
         }
 
         .announcement p {
@@ -227,17 +201,17 @@ $result = mysqli_query($con, $query);
         }
 
         .announcement-actions {
-            margin-top: 1rem;
+            margin-top: 15px;
             display: flex;
-            gap: 0.75rem;
+            gap: 10px;
         }
 
         .btn-edit, .btn-delete {
-            padding: 0.5rem 1rem;
+            padding: 6px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 14px;
             font-weight: 500;
             transition: all 0.3s ease;
         }
@@ -261,22 +235,49 @@ $result = mysqli_query($con, $query);
         }
 
         .alert {
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out forwards, fadeOut 0.5s ease-out 3s forwards;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background-color: #28a745;
+            color: white;
+            border: none;
         }
 
         .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
         }
 
         /* Modal Styles */
@@ -294,8 +295,8 @@ $result = mysqli_query($con, $query);
         .modal-content {
             background-color: white;
             margin: 5% auto;
-            padding: 2rem;
-            border-radius: 12px;
+            padding: 20px;
+            border-radius: 8px;
             width: 90%;
             max-width: 600px;
             position: relative;
@@ -303,9 +304,9 @@ $result = mysqli_query($con, $query);
 
         .close {
             position: absolute;
-            right: 1.5rem;
-            top: 1rem;
-            font-size: 1.5rem;
+            right: 15px;
+            top: 10px;
+            font-size: 24px;
             font-weight: bold;
             color: #666;
             cursor: pointer;
@@ -317,12 +318,13 @@ $result = mysqli_query($con, $query);
         }
 
         @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem;
+            .container {
+                width: 95%;
+                padding: 10px;
             }
 
             .card {
-                padding: 1.5rem;
+                padding: 15px;
             }
 
             .announcement-actions {
@@ -337,28 +339,20 @@ $result = mysqli_query($con, $query);
 </head>
 <body>
     <div class="navbar">
-        <a href="#" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
+        <a href="admin_dashboard.php">Admin Dashboard</a>
         <div>
-            <a href="admin_dashboard.php">Dashboard</a>
             <a href="announcement.php">Announcements</a>
             <a href="student_list.php">View Student List</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+            <a href="login.php" style="color: orange;">Log out</a>
         </div>
     </div>
 
-    <div class="main-container">
-        <div class="dashboard-header">
-            <h1>Announcements Management</h1>
-        </div>
-
+    <div class="container">
         <div class="card">
             <h2>Post New Announcement</h2>
-            <?php if (isset($_GET["error"])) { echo "<div class='alert alert-error'>" . htmlspecialchars($_GET["error"]) . "</div>"; } ?>
-            <?php if (isset($_GET["success"])) { echo "<div class='alert alert-success'>" . htmlspecialchars($_GET["success"]) . "</div>"; } ?>
-
             <form action="announcement.php" method="POST">
                 <div class="form-group">
                     <label for="title">Title</label>
@@ -408,7 +402,25 @@ $result = mysqli_query($con, $query);
         </div>
     </div>
 
+    <?php if (isset($_GET["error"])): ?>
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET["error"]); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET["success"])): ?>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET["success"]); ?>
+        </div>
+    <?php endif; ?>
+
     <script>
+        // Add Font Awesome for icons
+        var fontAwesome = document.createElement('link');
+        fontAwesome.rel = 'stylesheet';
+        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(fontAwesome);
+
         // Auto-expand textarea as user types
         document.getElementById("content").addEventListener("input", function() {
             this.style.height = "auto";
@@ -460,3 +472,4 @@ $result = mysqli_query($con, $query);
     </script>
 </body>
 </html>
+

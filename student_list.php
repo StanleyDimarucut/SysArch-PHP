@@ -7,6 +7,19 @@ if (!isset($_SESSION["admin_username"])) {
 
 // Connect to the database
 include("db.php");
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_sessions"])) {
+    $student_id = $_POST["student_id"];
+    
+    // Reset sessions back to 30
+    $reset_query = "UPDATE register SET remaining_sessions = 30 WHERE IDNO = ?";
+    $reset_stmt = mysqli_prepare($con, $reset_query);
+    mysqli_stmt_bind_param($reset_stmt, "s", $student_id);
+    mysqli_stmt_execute($reset_stmt);
+    
+    header("Location: student_list.php?success=Sessions reset successfully");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -82,6 +95,59 @@ include("db.php");
         #studentsTable tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        .btn-reset {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-reset:hover {
+            background-color: #218838;
+        }
+        
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out forwards, fadeOut 0.5s ease-out 3s forwards;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-success {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
     </style>
 </head>
 <body>
@@ -108,11 +174,13 @@ include("db.php");
                         <th>Name</th>
                         <th>Course</th>
                         <th>Year Level</th>
+                        <th>Remaining Sessions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    $students_query = "SELECT IDNO, FIRSTNAME, LASTNAME, COURSE, YEARLEVEL FROM register WHERE USERNAME != 'admin' ORDER BY LASTNAME";
+                    $students_query = "SELECT IDNO, FIRSTNAME, LASTNAME, COURSE, YEARLEVEL, remaining_sessions FROM register WHERE USERNAME != 'admin' ORDER BY LASTNAME";
                     $students_result = mysqli_query($con, $students_query);
                     while ($student = mysqli_fetch_assoc($students_result)) {
                         echo "<tr>";
@@ -120,6 +188,13 @@ include("db.php");
                         echo "<td>" . htmlspecialchars($student['FIRSTNAME'] . ' ' . $student['LASTNAME']) . "</td>";
                         echo "<td>" . htmlspecialchars($student['COURSE']) . "</td>";
                         echo "<td>" . htmlspecialchars($student['YEARLEVEL']) . "</td>";
+                        echo "<td style='" . ($student['remaining_sessions'] <= 5 ? 'color: #dc3545; font-weight: bold;' : 'color: #28a745; font-weight: bold;') . "'>" . htmlspecialchars($student['remaining_sessions']) . "</td>";
+                        echo "<td>
+                                <form method='POST' style='display: inline;'>
+                                    <input type='hidden' name='student_id' value='" . htmlspecialchars($student['IDNO']) . "'>
+                                    <button type='submit' name='reset_sessions' class='btn-reset' onclick='return confirm(\"Are you sure you want to reset this student's sessions to 30?\")'>Reset Sessions</button>
+                                </form>
+                              </td>";
                         echo "</tr>";
                     }
                     ?>
@@ -128,7 +203,19 @@ include("db.php");
         </div>
     </div>
 
+    <?php if (isset($_GET["success"])): ?>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET["success"]); ?>
+        </div>
+    <?php endif; ?>
+
     <script>
+        // Add Font Awesome for the check icon
+        var fontAwesome = document.createElement('link');
+        fontAwesome.rel = 'stylesheet';
+        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(fontAwesome);
+
         function filterStudents() {
             var input = document.getElementById("studentFilter");
             var filter = input.value.toLowerCase();
