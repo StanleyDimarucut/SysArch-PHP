@@ -67,179 +67,155 @@ $announcement_result = mysqli_query($con, $announcement_query);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
         body {
-            background-color: #f0f2f5;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: rgb(230, 233, 241);
         }
 
         .navbar {
             background-color: #144c94;
-            padding: 1rem 2rem;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
         }
-
         .navbar a {
             color: white;
             text-decoration: none;
             margin: 0 15px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: color 0.3s ease;
+            font-size: 18px;
         }
-
         .navbar a:hover {
-            color: #ffd700;
+            color: yellow;
         }
 
         .main-container {
-            margin-top: 80px;
-            padding: 2rem;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 95%;
+            margin: 20px auto;
+            padding: 0;
         }
 
         .dashboard-header {
-            margin-bottom: 2rem;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
 
         .dashboard-header h1 {
-            color: #1a1a1a;
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            color: #144c94;
+            font-size: 24px;
+            margin: 0;
         }
 
         .stats-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .stat-label {
             color: #666;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
 
         .stat-value {
             color: #144c94;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            font-size: 24px;
+            font-weight: bold;
         }
 
         .dashboard-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 1.5rem;
-            margin-top: 2rem;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .card {
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .card h2 {
-            color: #1a1a1a;
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #f0f2f5;
+            color: #144c94;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
         }
 
         .recent-activity {
-            margin-top: 1rem;
+            margin-top: 15px;
         }
 
         .activity-item {
-            padding: 1rem;
-            border-radius: 8px;
-            background: #f8f9fa;
-            margin-bottom: 0.8rem;
-            border-left: 4px solid #144c94;
+            padding: 15px;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
         .activity-item h3 {
-            font-size: 0.95rem;
-            color: #1a1a1a;
-            margin-bottom: 0.3rem;
+            font-size: 14px;
+            color: #144c94;
+            margin-bottom: 5px;
         }
 
         .activity-item p {
-            font-size: 0.85rem;
+            font-size: 13px;
             color: #666;
             margin: 0;
         }
 
         .announcement-list {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
-            padding-right: 0.5rem;
         }
 
         .announcement {
-            padding: 1rem;
-            background: #f8f9fa;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #144c94;
+            padding: 15px;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
         .announcement strong {
             display: block;
-            font-size: 1rem;
-            color: #1a1a1a;
-            margin-bottom: 0.3rem;
+            font-size: 14px;
+            color: #144c94;
+            margin-bottom: 5px;
         }
 
         .announcement small {
             display: block;
-            font-size: 0.8rem;
+            font-size: 12px;
             color: #666;
-            margin-bottom: 0.5rem;
+            margin-bottom: 5px;
         }
 
         .announcement p {
-            font-size: 0.9rem;
+            font-size: 13px;
             color: #444;
-            line-height: 1.5;
+            line-height: 1.4;
+            margin: 0;
         }
 
         /* Custom scrollbar */
@@ -260,6 +236,16 @@ $announcement_result = mysqli_query($con, $announcement_query);
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-container {
+                width: 95%;
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -268,9 +254,11 @@ $announcement_result = mysqli_query($con, $announcement_query);
         <div>
             <a href="announcement.php">Announcements</a>
             <a href="student_list.php">View Student List</a>
+            <a href="view_feedback.php">Feedback</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
+            <a href="sitin_history.php">Sit-in History</a>
             <a href="login.php" style="color: #ffd700;">Log out</a>
         </div>
     </div>
@@ -318,7 +306,7 @@ $announcement_result = mysqli_query($con, $announcement_query);
             </div>
         </div>
 
-        <div class="card" style="margin-top: 1.5rem;">
+        <div class="card">
             <h2>Recent Announcements</h2>
             <div class="announcement-list">
                 <?php while ($announcement = mysqli_fetch_assoc($announcement_result)) { ?>
@@ -341,13 +329,13 @@ $announcement_result = mysqli_query($con, $announcement_query);
                 datasets: [{
                     data: <?php echo json_encode($course_counts); ?>,
                     backgroundColor: [
-                        '#4361ee',
-                        '#3a0ca3',
-                        '#7209b7',
-                        '#f72585',
-                        '#4cc9f0'
+                        '#007bff',
+                        '#28a745',
+                        '#dc3545',
+                        '#ffc107',
+                        '#17a2b8'
                     ],
-                    borderWidth: 2
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -359,7 +347,8 @@ $announcement_result = mysqli_query($con, $announcement_query);
                         labels: {
                             padding: 20,
                             font: {
-                                size: 12
+                                size: 12,
+                                family: 'Arial'
                             }
                         }
                     }

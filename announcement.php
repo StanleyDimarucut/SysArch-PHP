@@ -68,61 +68,42 @@ $result = mysqli_query($con, $query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Announcements</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
         body {
-            background-color: rgb(230, 233, 241);
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: rgb(230, 233, 241);
         }
-
         .navbar {
             background-color: #144c94;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         .navbar a {
             color: white;
             text-decoration: none;
             margin: 0 15px;
             font-size: 18px;
         }
-
         .navbar a:hover {
             color: yellow;
         }
-
         .container {
-            width: 80%;
-            margin: 30px auto;
-        }
-
-        .card {
+            width: 95%;
+            margin: 20px auto;
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
         }
 
-        .card h2 {
+        h2 {
             color: #144c94;
             font-size: 1.5rem;
-            font-weight: 600;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f2f5;
         }
 
         .form-group {
@@ -132,18 +113,16 @@ $result = mysqli_query($con, $query);
         label {
             display: block;
             color: #666;
-            font-size: 0.9rem;
+            font-size: 14px;
             margin-bottom: 8px;
-            font-weight: 500;
         }
 
         input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
-            transition: border-color 0.3s ease;
         }
 
         textarea {
@@ -151,53 +130,42 @@ $result = mysqli_query($con, $query);
             resize: vertical;
         }
 
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #144c94;
-        }
-
         .btn-submit {
-            background-color: #144c94;
+            background-color: #007bff;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border: none;
             border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-submit:hover {
-            background-color: #0d3a7d;
+            font-size: 14px;
         }
 
         .announcement {
             padding: 15px;
-            background: #f8f9fa;
+            background: #f9f9f9;
             margin-bottom: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #144c94;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
         .announcement strong {
             display: block;
-            font-size: 1.1rem;
-            color: #1a1a1a;
+            font-size: 16px;
+            color: #144c94;
             margin-bottom: 5px;
         }
 
         .announcement small {
             display: block;
-            font-size: 0.85rem;
+            font-size: 13px;
             color: #666;
             margin-bottom: 10px;
         }
 
         .announcement p {
-            font-size: 0.95rem;
+            font-size: 14px;
             color: #444;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .announcement-actions {
@@ -207,77 +175,20 @@ $result = mysqli_query($con, $query);
         }
 
         .btn-edit, .btn-delete {
-            padding: 6px 12px;
+            padding: 8px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            color: white;
         }
 
         .btn-edit {
-            background-color: #ffc107;
-            color: #000;
+            background-color: #007bff;
         }
 
         .btn-delete {
             background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background-color: #e0a800;
-        }
-
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-
-        .alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            z-index: 1000;
-            animation: slideIn 0.5s ease-out forwards, fadeOut 0.5s ease-out 3s forwards;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert-success {
-            background-color: #28a745;
-            color: white;
-            border: none;
-        }
-
-        .alert-error {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-                visibility: hidden;
-            }
         }
 
         /* Modal Styles */
@@ -307,30 +218,38 @@ $result = mysqli_query($con, $query);
             right: 15px;
             top: 10px;
             font-size: 24px;
-            font-weight: bold;
-            color: #666;
             cursor: pointer;
-            transition: color 0.3s ease;
+            color: #666;
         }
 
-        .close:hover {
-            color: #000;
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        .alert-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .alert-error {
+            background-color: #dc3545;
+            color: white;
         }
 
         @media (max-width: 768px) {
             .container {
                 width: 95%;
-                padding: 10px;
-            }
-
-            .card {
                 padding: 15px;
             }
-
             .announcement-actions {
                 flex-direction: column;
             }
-
             .btn-edit, .btn-delete {
                 width: 100%;
             }
@@ -339,14 +258,16 @@ $result = mysqli_query($con, $query);
 </head>
 <body>
     <div class="navbar">
-        <a href="admin_dashboard.php">Admin Dashboard</a>
+        <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
         <div>
             <a href="announcement.php">Announcements</a>
             <a href="student_list.php">View Student List</a>
+            <a href="view_feedback.php">Feedback</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
-            <a href="login.php" style="color: orange;">Log out</a>
+            <a href="sitin_history.php">Sit-in History</a>
+            <a href="login.php" style="color: #ffd700;">Log out</a>
         </div>
     </div>
 
@@ -369,7 +290,7 @@ $result = mysqli_query($con, $query);
         <div class="card">
             <h2>Previous Announcements</h2>
             <?php while ($row = mysqli_fetch_assoc($result)) { ?>
-                <div class="announcement" id="announcement-<?php echo $row['id']; ?>">
+                <div class="announcement">
                     <strong><?php echo htmlspecialchars($row["title"]); ?></strong>
                     <small>Posted by <?php echo htmlspecialchars($row["admin_username"]); ?> on <?php echo date("F j, Y", strtotime($row["date_posted"])); ?></small>
                     <p><?php echo nl2br(htmlspecialchars($row["content"])); ?></p>
@@ -404,24 +325,17 @@ $result = mysqli_query($con, $query);
 
     <?php if (isset($_GET["error"])): ?>
         <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET["error"]); ?>
+            <?php echo htmlspecialchars($_GET["error"]); ?>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET["success"])): ?>
         <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET["success"]); ?>
+            <?php echo htmlspecialchars($_GET["success"]); ?>
         </div>
     <?php endif; ?>
 
     <script>
-        // Add Font Awesome for icons
-        var fontAwesome = document.createElement('link');
-        fontAwesome.rel = 'stylesheet';
-        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
-        document.head.appendChild(fontAwesome);
-
-        // Auto-expand textarea as user types
         document.getElementById("content").addEventListener("input", function() {
             this.style.height = "auto";
             this.style.height = (this.scrollHeight) + "px";
@@ -432,7 +346,6 @@ $result = mysqli_query($con, $query);
             this.style.height = (this.scrollHeight) + "px";
         });
 
-        // Edit Modal Functions
         function openEditModal(id, title, content) {
             document.getElementById("editModal").style.display = "block";
             document.getElementById("edit_id").value = id;
@@ -444,7 +357,6 @@ $result = mysqli_query($con, $query);
             document.getElementById("editModal").style.display = "none";
         }
 
-        // Delete Function
         function deleteAnnouncement(id) {
             if (confirm("Are you sure you want to delete this announcement?")) {
                 const form = document.createElement('form');
@@ -462,7 +374,6 @@ $result = mysqli_query($con, $query);
             }
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById("editModal");
             if (event.target == modal) {

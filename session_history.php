@@ -134,14 +134,16 @@ $result = mysqli_query($con, $query);
 </head>
 <body>
     <div class="navbar">
-        <a href="admin_dashboard.php">College of Computer Studies Admin</a>
+    <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
         <div>
             <a href="announcement.php">Announcements</a>
             <a href="student_list.php">View Student List</a>
+            <a href="view_feedback.php">Feedback</a>
             <a href="students.php">Sit-in</a>
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
-            <a href="login.php" style="color: orange;">Log out</a>
+            <a href="sitin_history.php">Sit-in History</a>
+            <a href="login.php" style="color: #ffd700;">Log out</a>
         </div>
     </div>
 
