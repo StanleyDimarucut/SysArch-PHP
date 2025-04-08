@@ -20,6 +20,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_sessions"])) {
     header("Location: student_list.php?success=Sessions reset successfully");
     exit();
 }
+
+// Add handler for resetting all sessions
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"])) {
+    // Reset all students' sessions to 30
+    $reset_all_query = "UPDATE register SET remaining_sessions = 30 WHERE USERNAME != 'admin'";
+    mysqli_query($con, $reset_all_query);
+    
+    header("Location: student_list.php?success=All sessions reset successfully");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -168,7 +178,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_sessions"])) {
     <div class="container">
         <div class="table-container">
             <h3>Registered Students</h3>
-            <input type="text" id="studentFilter" class="search-box" onkeyup="filterStudents()" placeholder="Search students...">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <input type="text" id="studentFilter" class="search-box" onkeyup="filterStudents()" placeholder="Search students...">
+                <form method="POST" style="margin: 0;">
+                    <button type="submit" name="reset_all_sessions" class="btn-reset" onclick="return confirm('Are you sure you want to reset ALL students\' sessions to 30?')">
+                        Reset All Sessions
+                    </button>
+                </form>
+            </div>
             <table id="studentsTable">
                 <thead>
                     <tr>

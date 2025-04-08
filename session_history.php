@@ -7,16 +7,65 @@ if (!isset($_SESSION["admin_username"])) {
 
 include("db.php");
 
-// Get the selected date (default to today)
-$selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+// Get filter parameters
+$selected_date = isset($_GET['date']) ? $_GET['date'] : '';
+$show_all = isset($_GET['show_all']) ? true : false;
+$lab_filter = isset($_GET['lab']) ? $_GET['lab'] : '';
+$purpose_filter = isset($_GET['purpose']) ? $_GET['purpose'] : '';
+
+// Get unique labs and purposes for dropdowns
+$labs_query = "SELECT DISTINCT lab FROM sit_in_records WHERE lab IS NOT NULL ORDER BY lab";
+$labs_result = mysqli_query($con, $labs_query);
+
+$purposes_query = "SELECT DISTINCT purpose FROM sit_in_records WHERE purpose IS NOT NULL ORDER BY purpose";
+$purposes_result = mysqli_query($con, $purposes_query);
 
 // Query to get session history with student details
 $query = "SELECT s.*, CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name 
           FROM sit_in_records s 
-          JOIN register r ON s.student_id = r.IDNO 
-          ORDER BY s.date DESC, s.time_in DESC";
+          JOIN register r ON s.student_id = r.IDNO
+          WHERE 1=1";
 
-$result = mysqli_query($con, $query);
+if (!$show_all && !empty($selected_date)) {
+    $query .= " AND s.date = ?";
+}
+
+if (!empty($lab_filter)) {
+    $query .= " AND s.lab = ?";
+}
+
+if (!empty($purpose_filter)) {
+    $query .= " AND s.purpose = ?";
+}
+
+$query .= " ORDER BY s.date DESC, s.time_in DESC";
+
+// Prepare and execute the query with parameters
+$stmt = mysqli_prepare($con, $query);
+$types = "";
+$params = [];
+
+if (!$show_all && !empty($selected_date)) {
+    $types .= "s";
+    $params[] = $selected_date;
+}
+
+if (!empty($lab_filter)) {
+    $types .= "s";
+    $params[] = $lab_filter;
+}
+
+if (!empty($purpose_filter)) {
+    $types .= "s";
+    $params[] = $purpose_filter;
+}
+
+if (!empty($types)) {
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+}
+
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 ?>
 
 <!DOCTYPE html>
@@ -151,10 +200,27 @@ $result = mysqli_query($con, $query);
         <h2>Generate Reports</h2>
         
         <div class="filter-container">
-            <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <form method="GET" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="date" name="date" class="date-input" value="<?php echo $selected_date; ?>">
+                <select name="lab" class="date-input">
+                    <option value="">All Labs</option>
+                    <?php while ($lab = mysqli_fetch_assoc($labs_result)): ?>
+                        <option value="<?php echo htmlspecialchars($lab['lab']); ?>" <?php echo $lab_filter == $lab['lab'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($lab['lab']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+                <select name="purpose" class="date-input">
+                    <option value="">All Purposes</option>
+                    <?php while ($purpose = mysqli_fetch_assoc($purposes_result)): ?>
+                        <option value="<?php echo htmlspecialchars($purpose['purpose']); ?>" <?php echo $purpose_filter == $purpose['purpose'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($purpose['purpose']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
                 <button type="submit" class="btn btn-search">Search</button>
                 <button type="button" class="btn btn-reset" onclick="location.href='session_history.php'">Reset</button>
+                <button type="button" class="btn btn-search" onclick="location.href='session_history.php?show_all=1'">Show All</button>
             </form>
         </div>
 
