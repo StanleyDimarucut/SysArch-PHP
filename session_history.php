@@ -260,6 +260,9 @@ $result = mysqli_stmt_get_result($stmt);
         </table>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         function filterTable() {
             var input = document.getElementById("filterInput");
@@ -285,18 +288,79 @@ $result = mysqli_stmt_get_result($stmt);
         }
 
         function exportToCSV() {
-            // Add CSV export functionality
-            alert('CSV export functionality will be implemented');
+            var table = document.getElementById("historyTable");
+            var rows = table.getElementsByTagName("tr");
+            var csv = [];
+            
+            // Get headers
+            var headerRow = rows[0];
+            var headers = [];
+            for (var i = 0; i < headerRow.cells.length; i++) {
+                headers.push(headerRow.cells[i].innerText);
+            }
+            csv.push(headers.join(","));
+            
+            // Get data rows
+            for (var i = 1; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.style.display !== "none") {
+                    var rowData = [];
+                    for (var j = 0; j < row.cells.length; j++) {
+                        var cell = row.cells[j];
+                        var text = cell.innerText;
+                        // Escape commas and quotes
+                        text = text.replace(/"/g, '""');
+                        if (text.includes(",") || text.includes('"')) {
+                            text = '"' + text + '"';
+                        }
+                        rowData.push(text);
+                    }
+                    csv.push(rowData.join(","));
+                }
+            }
+            
+            // Create and download file
+            var csvContent = csv.join("\n");
+            var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            var link = document.createElement("a");
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "session_history.csv");
+            link.style.visibility = "hidden";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function exportToExcel() {
-            // Add Excel export functionality
-            alert('Excel export functionality will be implemented');
+            var table = document.getElementById("historyTable");
+            var wb = XLSX.utils.table_to_book(table, { sheet: "Session History" });
+            XLSX.writeFile(wb, "session_history.xlsx");
         }
 
         function exportToPDF() {
-            // Add PDF export functionality
-            alert('PDF export functionality will be implemented');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.autoTable({
+                html: '#historyTable',
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [20, 76, 148],
+                    textColor: 255,
+                    fontSize: 10
+                },
+                bodyStyles: {
+                    fontSize: 9
+                },
+                margin: { top: 20 },
+                didDrawPage: function(data) {
+                    doc.setFontSize(16);
+                    doc.text("Session History", 14, 15);
+                }
+            });
+            
+            doc.save("session_history.pdf");
         }
     </script>
 </body>

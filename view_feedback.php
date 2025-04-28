@@ -13,7 +13,7 @@ $date_filter = isset($_GET['date']) ? $_GET['date'] : '';
 $student_filter = isset($_GET['student']) ? $_GET['student'] : '';
 
 // Build the query with filters
-$query = "SELECT f.*, CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as student_name, r.COURSE, r.YEARLEVEL 
+$query = "SELECT f.*, CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as student_name, r.COURSE, r.YEARLEVEL
           FROM feedback f
           JOIN register r ON f.student_id = r.IDNO
           WHERE 1=1";
@@ -231,9 +231,10 @@ $result = mysqli_stmt_get_result($stmt);
                 <thead>
                     <tr>
                         <th>Student Name</th>
-                        <th>ID Number</th>
                         <th>Course</th>
                         <th>Year Level</th>
+                        <th>Room</th>
+                        <th>Purpose</th>
                         <th>Subject</th>
                         <th>Message</th>
                         <th>Date Submitted</th>
@@ -243,27 +244,18 @@ $result = mysqli_stmt_get_result($stmt);
                     <?php if (mysqli_num_rows($result) > 0): ?>
                         <?php while ($feedback = mysqli_fetch_assoc($result)): ?>
                             <tr>
+                                <td><div class="student-name"><?php echo htmlspecialchars($feedback["student_name"]); ?></div></td>
+                                <td><?php echo htmlspecialchars($feedback["COURSE"]); ?></td>
+                                <td><?php echo htmlspecialchars($feedback["YEARLEVEL"]); ?></td>
+                                <td><?php echo isset($feedback["room"]) ? htmlspecialchars($feedback["room"]) : 'N/A'; ?></td>
+                                <td><?php echo isset($feedback["purpose"]) ? htmlspecialchars($feedback["purpose"]) : 'N/A'; ?></td>
+                                <td><?php echo htmlspecialchars($feedback["subject"]); ?></td>
                                 <td>
-                                    <div class="student-name"><?php echo htmlspecialchars($feedback["student_name"]); ?></div>
+                                    <div class="feedback-message">
+                                        <?php echo nl2br(htmlspecialchars($feedback["message"])); ?>
+                                    </div>
                                 </td>
-                                <td>
-                                    <div class="student-details"><?php echo htmlspecialchars($feedback["student_id"]); ?></div>
-                                </td>
-                                <td>
-                                    <div class="student-details"><?php echo htmlspecialchars($feedback["COURSE"]); ?></div>
-                                </td>
-                                <td>
-                                    <div class="student-details"><?php echo htmlspecialchars($feedback["YEARLEVEL"]); ?></div>
-                                </td>
-                                <td>
-                                    <div class="subject-tag"><?php echo htmlspecialchars($feedback["subject"]); ?></div>
-                                </td>
-                                <td>
-                                    <div class="feedback-message"><?php echo nl2br(htmlspecialchars($feedback["message"])); ?></div>
-                                </td>
-                                <td class="date-cell">
-                                    <?php echo date("F j, Y, g:i a", strtotime($feedback["date_submitted"])); ?>
-                                </td>
+                                <td><?php echo date('M d, Y h:i A', strtotime($feedback["date_submitted"])); ?></td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
@@ -285,28 +277,32 @@ $result = mysqli_stmt_get_result($stmt);
 
             for (var i = 1; i < tr.length; i++) {
                 var td = tr[i].getElementsByTagName("td");
-                var found = false;
-                var rowDate = td[6].textContent || td[6].innerText;
+                if (td.length === 0) continue;
+                
+                var found = true;
+                var rowDate = td[7].textContent || td[7].innerText;
                 var rowDateFormatted = new Date(rowDate).toISOString().split('T')[0];
 
                 if (dateFilter && rowDateFormatted !== dateFilter) {
-                    tr[i].style.display = "none";
-                    continue;
+                    found = false;
                 }
 
-                for (var j = 0; j < td.length; j++) {
-                    var cell = td[j];
-                    if (cell) {
-                        var text = cell.textContent || cell.innerText;
+                if (studentFilter) {
+                    var nameMatch = false;
+                    // Check name and course columns
+                    for (var j = 0; j < 3; j++) {
+                        var text = td[j].textContent || td[j].innerText;
                         if (text.toLowerCase().indexOf(studentFilter) > -1) {
-                            found = true;
+                            nameMatch = true;
                             break;
                         }
                     }
+                    if (!nameMatch) found = false;
                 }
+
                 tr[i].style.display = found ? "" : "none";
             }
         }
     </script>
 </body>
-</html> 
+</html>

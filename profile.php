@@ -286,7 +286,6 @@ if ($row = mysqli_fetch_assoc($result)) {
             <a href="profile.php">Edit Profile</a>
             <a href="history.php">History</a>
             <a href="Reservation.php">Reservation</a>
-            <a href="feedback.php">Feedback</a>
             <a href="../php/login.php" style="color: #ffd700;">Log out</a>
         </div>
     </div>
