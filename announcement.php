@@ -68,212 +68,511 @@ $result = mysqli_query($con, $query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Announcements</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: rgb(230, 233, 241);
+            background-color: #f0f2f5;
         }
+
         .navbar {
-            background-color: #144c94;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
-        }
-        .navbar a:hover {
-            color: yellow;
-        }
-        .container {
-            width: 95%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        h2 {
-            color: #144c94;
-            font-size: 1.5rem;
+        .navbar-brand {
+            color: white;
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .nav-link i {
+            font-size: 14px;
+        }
+
+        .nav-link.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                width: 100%;
+                padding: 15px 0;
+                margin-top: 15px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .nav-menu.active {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 8px;
+            }
+
+            .navbar {
+                flex-wrap: wrap;
+            }
+
+            .navbar-brand {
+                flex: 1;
+            }
+
+            .nav-link {
+                justify-content: center;
+            }
+        }
+
+        .main-container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0;
+        }
+
+        .alert {
+            padding: 15px;
             margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .page-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            color: #1a5dba;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-header h1 i {
+            margin-right: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            color: #1a5dba;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f2f5;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .card h2 i {
+            margin-right: 10px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
-        label {
+        .form-group label {
             display: block;
             color: #666;
             font-size: 14px;
             margin-bottom: 8px;
+            font-weight: 500;
         }
 
-        input, textarea {
+        .form-group input,
+        .form-group textarea {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
             font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
         }
 
-        textarea {
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #1a5dba;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
+        }
+
+        .form-group textarea {
             min-height: 150px;
             resize: vertical;
         }
 
         .btn-submit {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
             color: white;
-            padding: 8px 15px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 8px;
             font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
+        }
+
+        .announcement-list {
+            margin-top: 20px;
         }
 
         .announcement {
-            padding: 15px;
-            background: #f9f9f9;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 16px;
+            background: #f8fafc;
+            margin-bottom: 12px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .announcement:hover {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transform: translateX(4px);
         }
 
         .announcement strong {
             display: block;
-            font-size: 16px;
-            color: #144c94;
-            margin-bottom: 5px;
+            font-size: 15px;
+            color: #1a5dba;
+            margin-bottom: 6px;
+            font-weight: 600;
         }
 
         .announcement small {
             display: block;
             font-size: 13px;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .announcement p {
             font-size: 14px;
             color: #444;
-            line-height: 1.5;
+            line-height: 1.6;
+            margin-bottom: 15px;
         }
 
         .announcement-actions {
-            margin-top: 15px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .btn-edit, .btn-delete {
-            padding: 8px 15px;
+        .btn-edit,
+        .btn-delete {
+            padding: 8px 16px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 6px;
             font-size: 14px;
-            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
         }
 
         .btn-edit {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            color: white;
         }
 
         .btn-delete {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-edit:hover,
+        .btn-delete:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-edit:hover {
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
+        }
+
+        .btn-delete:hover {
+            box-shadow: 0 4px 12px rgba(220,53,69,0.2);
+        }
+
+        .btn-edit i,
+        .btn-delete i {
+            margin-right: 6px;
         }
 
         /* Modal Styles */
         .modal {
-            display: none;
             position: fixed;
             z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
         }
 
         .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 500px;
             position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: modalSlideIn 0.3s ease;
+            margin: 0;
+        }
+
+        .modal-content h2 {
+            font-size: 20px;
+            margin: 0 0 24px 0;
+            padding-right: 24px;
+        }
+
+        .modal-content .form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-content input,
+        .modal-content textarea {
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .modal-content textarea {
+            min-height: 120px;
+            max-height: 300px;
+        }
+
+        .modal-content .btn-submit {
+            width: 100%;
+            margin-top: 8px;
         }
 
         .close {
             position: absolute;
-            right: 15px;
-            top: 10px;
+            right: 24px;
+            top: 24px;
             font-size: 24px;
-            cursor: pointer;
+            font-weight: bold;
             color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
         }
 
-        .alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 4px;
-            font-size: 14px;
-            z-index: 1000;
+        .close:hover {
+            background: rgba(0,0,0,0.05);
+            color: #1a5dba;
         }
 
-        .alert-success {
-            background-color: #28a745;
-            color: white;
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        .alert-error {
-            background-color: #dc3545;
-            color: white;
+        @media (max-width: 576px) {
+            .modal-content {
+                width: 90%;
+                padding: 24px;
+                margin: 20px;
+            }
         }
 
         @media (max-width: 768px) {
-            .container {
+            .main-container {
                 width: 95%;
-                padding: 15px;
+                padding: 10px;
             }
-            .announcement-actions {
+            .navbar {
                 flex-direction: column;
+                padding: 10px;
             }
-            .btn-edit, .btn-delete {
-                width: 100%;
+            .navbar > div {
+                margin-top: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .navbar a {
+                margin: 5px;
+            }
+            .page-header {
+                padding: 15px 20px;
+            }
+            .card {
+                padding: 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
-        <div>
-            <a href="announcement.php">Announcements</a>
-            <a href="student_list.php">View Student List</a>
-            <a href="view_feedback.php">Feedback</a>
-            <a href="students.php">Sit-in</a>
-            <a href="sitin_view.php">Current Sit-in</a>
-            <a href="session_history.php">Sit-in Reports</a>
-            <a href="sitin_history.php">Sit-in History</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+        <a href="admin_dashboard.php" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Admin Dashboard
+        </a>
+        <div class="mobile-menu-toggle" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+        <div class="nav-menu">
+            <a href="announcement.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="student_list.php" class="nav-link"><i class="fas fa-users"></i> Student List</a>
+            <a href="view_feedback.php" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="students.php" class="nav-link"><i class="fas fa-user-check"></i> Sit-in</a>
+            <a href="sitin_view.php" class="nav-link"><i class="fas fa-clock"></i> Current Sit-in</a>
+            <a href="session_history.php" class="nav-link"><i class="fas fa-history"></i> Reports</a>
+            <a href="sitin_history.php" class="nav-link"><i class="fas fa-calendar-alt"></i> History</a>
+            <a href="leaderboards.php" class="nav-link"><i class="fas fa-trophy"></i> Leaderboards</a>
+            <a href="resources.php" class="nav-link"><i class="fas fa-book"></i> Resources</a>
+            <a href="login.php" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
-    <div class="container">
+    <div class="main-container">
+        <?php if (isset($_GET["error"])): ?>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <?php echo htmlspecialchars($_GET["error"]); ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="page-header">
+            <h1><i class="fas fa-bullhorn"></i> Announcements Management</h1>
+        </div>
+
         <div class="card">
-            <h2>Post New Announcement</h2>
+            <h2><i class="fas fa-plus-circle"></i> Post New Announcement</h2>
             <form action="announcement.php" method="POST">
                 <div class="form-group">
                     <label for="title">Title</label>
@@ -283,31 +582,37 @@ $result = mysqli_query($con, $query);
                     <label for="content">Content</label>
                     <textarea id="content" name="content" required placeholder="Enter announcement content"></textarea>
                 </div>
-                <button type="submit" class="btn-submit">Post Announcement</button>
+                <button type="submit" name="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Post Announcement</button>
             </form>
         </div>
 
         <div class="card">
-            <h2>Previous Announcements</h2>
-            <?php while ($row = mysqli_fetch_assoc($result)) { ?>
-                <div class="announcement">
-                    <strong><?php echo htmlspecialchars($row["title"]); ?></strong>
-                    <small>Posted by <?php echo htmlspecialchars($row["admin_username"]); ?> on <?php echo date("F j, Y", strtotime($row["date_posted"])); ?></small>
-                    <p><?php echo nl2br(htmlspecialchars($row["content"])); ?></p>
-                    <div class="announcement-actions">
-                        <button class="btn-edit" onclick="openEditModal(<?php echo $row['id']; ?>, '<?php echo addslashes($row['title']); ?>', '<?php echo addslashes($row['content']); ?>')">Edit</button>
-                        <button class="btn-delete" onclick="deleteAnnouncement(<?php echo $row['id']; ?>)">Delete</button>
+            <h2><i class="fas fa-list"></i> Previous Announcements</h2>
+            <div class="announcement-list">
+                <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+                    <div class="announcement">
+                        <strong><?php echo htmlspecialchars($row["title"]); ?></strong>
+                        <small><i class="far fa-calendar-alt"></i> <?php echo date("F j, Y", strtotime($row["date_posted"])); ?></small>
+                        <p><?php echo nl2br(htmlspecialchars($row["content"])); ?></p>
+                        <div class="announcement-actions">
+                            <button class="btn-edit" onclick="editAnnouncement(<?php echo $row['id']; ?>, '<?php echo addslashes($row['title']); ?>', '<?php echo addslashes($row['content']); ?>')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-delete" onclick="deleteAnnouncement(<?php echo $row['id']; ?>)">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
                     </div>
-                </div>
-            <?php } ?>
+                <?php } ?>
+            </div>
         </div>
     </div>
 
     <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2>Edit Announcement</h2>
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-edit"></i> Edit Announcement</h2>
             <form action="announcement.php" method="POST">
                 <input type="hidden" id="edit_id" name="edit_id">
                 <div class="form-group">
@@ -318,24 +623,13 @@ $result = mysqli_query($con, $query);
                     <label for="edit_content">Content</label>
                     <textarea id="edit_content" name="edit_content" required></textarea>
                 </div>
-                <button type="submit" class="btn-submit">Update Announcement</button>
+                <button type="submit" name="update" class="btn-submit"><i class="fas fa-save"></i> Update Announcement</button>
             </form>
         </div>
     </div>
 
-    <?php if (isset($_GET["error"])): ?>
-        <div class="alert alert-error">
-            <?php echo htmlspecialchars($_GET["error"]); ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if (isset($_GET["success"])): ?>
-        <div class="alert alert-success">
-            <?php echo htmlspecialchars($_GET["success"]); ?>
-        </div>
-    <?php endif; ?>
-
     <script>
+        // Auto-resize textareas
         document.getElementById("content").addEventListener("input", function() {
             this.style.height = "auto";
             this.style.height = (this.scrollHeight) + "px";
@@ -346,17 +640,20 @@ $result = mysqli_query($con, $query);
             this.style.height = (this.scrollHeight) + "px";
         });
 
-        function openEditModal(id, title, content) {
-            document.getElementById("editModal").style.display = "block";
+        // Edit announcement function
+        function editAnnouncement(id, title, content) {
+            document.getElementById("editModal").classList.add("show");
             document.getElementById("edit_id").value = id;
             document.getElementById("edit_title").value = title;
             document.getElementById("edit_content").value = content;
+            
+            // Auto resize the textarea after setting content
+            const textarea = document.getElementById("edit_content");
+            textarea.style.height = "auto";
+            textarea.style.height = (textarea.scrollHeight) + "px";
         }
 
-        function closeEditModal() {
-            document.getElementById("editModal").style.display = "none";
-        }
-
+        // Delete announcement function
         function deleteAnnouncement(id) {
             if (confirm("Are you sure you want to delete this announcement?")) {
                 const form = document.createElement('form');
@@ -374,11 +671,37 @@ $result = mysqli_query($con, $query);
             }
         }
 
+        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById("editModal");
             if (event.target == modal) {
-                modal.style.display = "none";
+                modal.classList.remove("show");
             }
+        }
+
+        // Close modal when clicking the X
+        document.querySelector('.close').onclick = function() {
+            document.getElementById("editModal").classList.remove("show");
+        }
+
+        // Handle alerts animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s ease-in-out';
+                setTimeout(() => alert.style.opacity = '1', 100);
+                
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }, 3000);
+            });
+        });
+
+        function toggleMenu() {
+            const menu = document.querySelector('.nav-menu');
+            menu.classList.toggle('active');
         }
     </script>
 </body>

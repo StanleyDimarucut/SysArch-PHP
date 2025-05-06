@@ -202,6 +202,7 @@ $labs_result = mysqli_query($con, $labs_query);
             <a href="sitin_view.php">Current Sit-in</a>
             <a href="session_history.php">Sit-in Reports</a>
             <a href="sitin_history.php">Sit-in History</a>
+            <a href="leaderboards.php">Leaderboards</a>
             <a href="login.php" style="color: #ffd700;">Log out</a>
         </div>
     </div>
