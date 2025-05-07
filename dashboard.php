@@ -42,6 +42,7 @@ if ($row = mysqli_fetch_assoc($result)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -73,14 +74,30 @@ if ($row = mysqli_fetch_assoc($result)) {
         .navbar a {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
+            padding: 8px 16px;
+            border-radius: 8px;
             font-size: 0.95rem;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .navbar a:hover {
+            background: rgba(255,255,255,0.15);
             color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .navbar a.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .navbar a.logout:hover {
+            background: rgba(255,217,0,0.25);
         }
 
         .main-container {
@@ -89,31 +106,39 @@ if ($row = mysqli_fetch_assoc($result)) {
             max-width: 1400px;
             margin-left: auto;
             margin-right: auto;
+            width: 95%;
         }
 
         .dashboard-header {
-            margin-bottom: 2rem;
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
         }
 
         .dashboard-header h1 {
-            color: #1a1a1a;
-            font-size: 1.8rem;
+            color: #1a5dba;
+            font-size: 24px;
+            margin: 0;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 2fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            gap: 24px;
+            margin-bottom: 24px;
         }
 
         .card {
             background: white;
-            padding: 1.5rem;
+            padding: 24px;
             border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
 
         .profile-card {
@@ -125,8 +150,8 @@ if ($row = mysqli_fetch_assoc($result)) {
             height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #144c94;
-            margin: 1rem 0;
+            border: 3px solid #1a5dba;
+            margin: 1.5rem auto;
         }
 
         .info-table {
@@ -135,13 +160,14 @@ if ($row = mysqli_fetch_assoc($result)) {
         }
 
         .info-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #f0f2f5;
+            padding: 12px;
+            border-bottom: 1px solid #e5e9ef;
         }
 
         .info-table td:first-child {
             color: #666;
             font-weight: 500;
+            width: 40%;
         }
 
         .info-table td:last-child {
@@ -150,71 +176,51 @@ if ($row = mysqli_fetch_assoc($result)) {
         }
 
         .card h2 {
-            color: #1a1a1a;
-            font-size: 1.2rem;
+            color: #1a5dba;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #f0f2f5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .announcement-list {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 0.5rem;
         }
 
         .announcement {
             padding: 1rem;
-            background: #f8f9fa;
+            background: #f8fafc;
             margin-bottom: 1rem;
             border-radius: 8px;
-            border-left: 4px solid #144c94;
+            border-left: 4px solid #1a5dba;
         }
 
         .announcement strong {
             display: block;
-            font-size: 1rem;
-            color: #1a1a1a;
-            margin-bottom: 0.3rem;
+            font-size: 15px;
+            color: #1a5dba;
+            margin-bottom: 6px;
+            font-weight: 600;
         }
 
         .announcement small {
             display: block;
-            font-size: 0.8rem;
+            font-size: 13px;
             color: #666;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
         }
 
         .announcement p {
-            font-size: 0.9rem;
+            font-size: 14px;
             color: #444;
-            line-height: 1.5;
-        }
-
-        .rules-card {
-            margin-top: 1.5rem;
-        }
-
-        .rules-list {
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 0.5rem;
-        }
-
-        .rules-list p {
-            margin-bottom: 1rem;
             line-height: 1.6;
-        }
-
-        .rules-list ol {
-            padding-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .rules-list li {
-            margin-bottom: 0.5rem;
-            color: #444;
+            margin: 0;
         }
 
         /* Custom scrollbar */
@@ -228,41 +234,52 @@ if ($row = mysqli_fetch_assoc($result)) {
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #888;
+            background: #c1c1c1;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #a8a8a8;
         }
 
         @media (max-width: 1024px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
+            .main-container {
+                padding: 1rem;
+            }
+            .navbar {
+                padding: 1rem;
+            }
+            .navbar a {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="#" style="font-size: 1.2rem; font-weight: 600;">Student Dashboard</a>
+        <a href="#" style="font-size: 1.2rem; font-weight: 600;"><i class="fas fa-home"></i> Student Dashboard</a>
         <div>
-            <a href="dashboard.php">Home</a>
-            <a href="profile.php">Edit Profile</a>
-            <a href="history.php">History</a>
-            <a href="Reservation.php">Reservation</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+            <a href="dashboard.php"><i class="fas fa-home"></i> Home</a>
+            <a href="profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+            <a href="history.php"><i class="fas fa-history"></i> History</a>
+            <a href="student_resources.php"><i class="fas fa-book"></i> Resources</a>
+            <a href="Reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>
+            <a href="login.php" class="logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
     <div class="main-container">
         <div class="dashboard-header">
-            <h1>Welcome, <?php echo $fullname; ?>!</h1>
+            <h1><i class="fas fa-user-circle"></i> Welcome, <?php echo $fullname; ?>!</h1>
         </div>
 
         <div class="dashboard-grid">
             <div class="card profile-card">
-                <h2>Student Information</h2>
+                <h2><i class="fas fa-id-card"></i> Student Information</h2>
                 <img src="<?php echo $profile_img; ?>" alt="Profile Picture" class="profile-img">
                 <table class="info-table">
                     <tr><td>ID Number:</td><td><?php echo $idno; ?></td></tr>
@@ -279,46 +296,16 @@ if ($row = mysqli_fetch_assoc($result)) {
             </div>
 
             <div class="card">
-                <h2>Recent Announcements</h2>
+                <h2><i class="fas fa-bullhorn"></i> Recent Announcements</h2>
                 <div class="announcement-list">
                     <?php while ($announcement = mysqli_fetch_assoc($announcement_result)) { ?>
                         <div class="announcement">
                             <strong><?php echo htmlspecialchars($announcement["title"]); ?></strong>
-                            <small><?php echo date("F j, Y", strtotime($announcement["date_posted"])); ?></small>
+                            <small>Posted on <?php echo date('F j, Y', strtotime($announcement["date_posted"])); ?></small>
                             <p><?php echo nl2br(htmlspecialchars($announcement["content"])); ?></p>
                         </div>
                     <?php } ?>
                 </div>
-            </div>
-        </div>
-
-        <div class="card rules-card">
-            <h2>Laboratory Rules and Regulations</h2>
-            <div class="rules-list">
-                <p><strong>COLLEGE OF INFORMATION & COMPUTER STUDIES</strong></p>
-                <p>To avoid embarrassment and maintain camaraderie with your friends and superiors at our laboratories, please observe the following:</p>
-                <ol>
-                    <li>Maintain silence, proper decorum, and discipline inside the laboratory. Mobile phones, walkmans, and other personal equipment must be switched off.</li>
-                    <li>Games are not allowed inside the lab. This includes computer-related games, card games, and other games that may disturb the operation of the lab.</li>
-                    <li>Surfing the Internet is allowed only with the permission of the instructor. Downloading and installing software are strictly prohibited.</li>
-                    <li>Getting access to websites not related to the course (especially pornographic and illicit sites) is strictly prohibited.</li>
-                    <li>Deleting computer files and changing the computer's setup is a major offense.</li>
-                    <li>Observe computer time usage carefully. A fifteen-minute allowance is given for each use; otherwise, the unit will be given to those who wish to "sit in".</li>
-                    <li>Do not enter the lab unless the instructor is present.</li>
-                    <li>All bags and knapsacks must be deposited at the counter.</li>
-                    <li>Follow the seating arrangement of your instructor.</li>
-                    <li>At the end of class, all software programs must be closed.</li>
-                    <li>Return all chairs to their proper places after use.</li>
-                    <li>Chewing gum, eating, drinking, smoking, and vandalism are prohibited inside the lab.</li>
-                    <li>Anyone causing a disturbance will be asked to leave the lab.</li>
-                    <li>Persons exhibiting hostile or threatening behavior (yelling, swearing, etc.) will be removed.</li>
-                    <li>For serious offenses, lab personnel may call security for assistance.</li>
-                    <li>Any technical issues must be reported to the lab supervisor, student assistant, or instructor immediately.</li>
-                </ol>
-
-                <p><strong>DISCIPLINARY ACTION</strong></p>
-                <p><strong>First Offense:</strong> The Head, Dean, or OIC recommends suspension from classes.</p>
-                <p><strong>Second & Subsequent Offenses:</strong> A recommendation for heavier sanctions will be endorsed to the Guidance Center.</p>
             </div>
         </div>
     </div>

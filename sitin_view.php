@@ -9,14 +9,23 @@ if (!isset($_SESSION["admin_username"])) {
 include("db.php");
 
 // Query to get active sit-in records with student details
-$query = "SELECT s.*, CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name 
-          FROM sit_in_records s 
-          JOIN register r ON s.student_id = r.IDNO 
-          WHERE s.date = CURDATE() 
-          AND s.time_out IS NULL 
-          ORDER BY s.time_in DESC";
+$active_sessions_query = "SELECT 
+    s.student_id,
+    CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name,
+    s.purpose,
+    s.lab,
+    TIME_FORMAT(s.time_in, '%l:%i %p') as time_in,
+    r.remaining_sessions
+FROM sit_in_records s
+JOIN register r ON s.student_id = r.IDNO
+WHERE s.date = CURDATE() 
+AND s.time_in IS NOT NULL 
+AND s.time_out IS NULL
+AND s.purpose IS NOT NULL 
+AND s.lab IS NOT NULL
+ORDER BY s.time_in DESC";
 
-$result = mysqli_query($con, $query);
+$result = mysqli_query($con, $active_sessions_query);
 
 // Handle end session
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["end_session"])) {
@@ -69,24 +78,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["end_session"])) {
         exit();
     }
 }
-
-// Get current active sessions
-$active_sessions_query = "SELECT 
-    s.id,
-    s.student_id,
-    CONCAT(r.FIRSTNAME, ' ', r.LASTNAME) as full_name,
-    s.purpose,
-    s.lab,
-    DATE_FORMAT(s.time_in, '%l:%i %p') as time_in,
-    r.remaining_sessions,
-    s.date
-FROM sit_in_records s
-JOIN register r ON s.student_id = r.IDNO
-WHERE s.date = CURDATE() 
-AND s.time_out IS NULL
-ORDER BY s.time_in DESC";
-
-$result = mysqli_query($con, $active_sessions_query);
 ?>
 
 <!DOCTYPE html>
@@ -95,126 +86,265 @@ $result = mysqli_query($con, $active_sessions_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Current Sit-in</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: rgb(230, 233, 241);
+            background-color: #f0f2f5;
         }
+
         .navbar {
-            background-color: #144c94;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .navbar a {
+
+        .navbar-brand {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
-        .navbar a:hover {
-            color: yellow;
+
+        .navbar-brand:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
         }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
         .container {
             width: 95%;
+            max-width: 1400px;
             margin: 20px auto;
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-header h2 {
+            color: #1a5dba;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-box {
+            padding: 12px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .filter-box:focus {
+            outline: none;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 16px;
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
+            padding: 16px;
             text-align: left;
+            border-bottom: 1px solid #e5e9ef;
+            font-size: 14px;
         }
+
         th {
-            background-color: #144c94;
-            color: white;
+            background-color: #f8fafc;
+            color: #1a5dba;
+            font-weight: 600;
+            white-space: nowrap;
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
+
+        td {
+            color: #444;
         }
-        .filter-box {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            width: 200px;
+
+        tbody tr:hover {
+            background-color: #f8fafc;
         }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        
+
         .btn-end-session {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 6px 12px;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+
         .btn-end-session:hover {
-            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220,53,69,0.2);
+        }
+
+        .alert {
+            padding: 16px 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .container {
+                width: 90%;
+                padding: 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .filter-box {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
-        <div>
-            <a href="announcement.php">Announcements</a>
-            <a href="student_list.php">View Student List</a>
-            <a href="view_feedback.php">Feedback</a>
-            <a href="students.php">Sit-in</a>
-            <a href="sitin_view.php">Current Sit-in</a>
-            <a href="session_history.php">Sit-in Reports</a>
-            <a href="sitin_history.php">Sit-in History</a>
-            <a href="leaderboards.php">Leaderboards</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+        <a href="admin_dashboard.php" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Admin Dashboard
+        </a>
+        <div class="nav-menu">
+            <a href="announcement.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="student_list.php" class="nav-link"><i class="fas fa-users"></i> Student List</a>
+            <a href="view_feedback.php" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="students.php" class="nav-link"><i class="fas fa-user-check"></i> Sit-in</a>
+            <a href="sitin_view.php" class="nav-link"><i class="fas fa-clock"></i> Current Sit-in</a>
+            <a href="session_history.php" class="nav-link"><i class="fas fa-history"></i> Reports</a>
+            <a href="sitin_history.php" class="nav-link"><i class="fas fa-calendar-alt"></i> History</a>
+            <a href="leaderboards.php" class="nav-link"><i class="fas fa-trophy"></i> Leaderboards</a>
+            <a href="resources.php" class="nav-link"><i class="fas fa-book"></i> Resources</a>
+            <a href="login.php" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
     <div class="container">
-        <h2>Current Active Sessions</h2>
+        <div class="page-header">
+            <h2><i class="fas fa-clock"></i> Current Active Sessions</h2>
+        </div>
         
         <?php if (isset($_GET["error"])): ?>
             <div class="alert alert-danger">
-                <?php echo htmlspecialchars($_GET["error"]); ?>
+                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET["error"]); ?>
             </div>
         <?php endif; ?>
         
         <?php if (isset($_GET["success"])): ?>
             <div class="alert alert-success">
-                <?php echo htmlspecialchars($_GET["success"]); ?>
+                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET["success"]); ?>
             </div>
         <?php endif; ?>
         
-        <input type="text" class="filter-box" id="filterInput" placeholder="Filter..." onkeyup="filterTable()">
+        <input type="text" class="filter-box" id="filterInput" placeholder="Filter by name, ID, or purpose..." onkeyup="filterTable()">
 
         <table id="activeSessionsTable">
             <thead>
@@ -240,7 +370,9 @@ $result = mysqli_query($con, $active_sessions_query);
                         <td>
                             <form method="POST">
                                 <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($row['student_id']); ?>">
-                                <button type="submit" name="end_session" class="btn-end-session">End Session</button>
+                                <button type="submit" name="end_session" class="btn-end-session">
+                                    <i class="fas fa-sign-out-alt"></i> End Session
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -274,4 +406,4 @@ $result = mysqli_query($con, $active_sessions_query);
         }
     </script>
 </body>
-</html> 
+</html>

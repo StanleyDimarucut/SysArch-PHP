@@ -74,295 +74,427 @@ $result = mysqli_stmt_get_result($stmt);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Generate Reports</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: rgb(230, 233, 241);
+            background-color: #f0f2f5;
         }
+
         .navbar {
-            background-color: #144c94;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .navbar a {
+
+        .navbar-brand {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
-        .navbar a:hover {
-            color: yellow;
+
+        .navbar-brand:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
         }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
         .container {
             width: 95%;
+            max-width: 1400px;
             margin: 20px auto;
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
-        .filter-container {
+
+        .page-header {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        .date-input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        .page-header h2 {
+            color: #1a5dba;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+
+        .filter-container {
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
             font-size: 14px;
+            font-weight: 500;
+            color: #444;
         }
-        .btn-search {
-            background-color: #007bff;
-            color: white;
+
+        .form-control {
+            padding: 10px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.3s ease;
         }
-        .btn-reset {
-            background-color: #dc3545;
-            color: white;
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
         }
-        .export-buttons {
-            margin-bottom: 20px;
+
+        .button-group {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: flex-end;
         }
-        .export-btn {
-            padding: 6px 12px;
-            margin-right: 5px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 4px;
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+
+        .btn-search {
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            color: white;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
+        }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .btn-export {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e9ef;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #1a5dba;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            color: #444;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
             margin-top: 20px;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #144c94;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .filter-box {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-left: 10px;
-        }
-        
-        .btn-end-session {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        
-        .btn-end-session:hover {
-            background-color: #c82333;
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .container {
+                width: 90%;
+                padding: 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-    <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
-        <div>
-            <a href="announcement.php">Announcements</a>
-            <a href="student_list.php">View Student List</a>
-            <a href="view_feedback.php">Feedback</a>
-            <a href="students.php">Sit-in</a>
-            <a href="sitin_view.php">Current Sit-in</a>
-            <a href="session_history.php">Sit-in Reports</a>
-            <a href="sitin_history.php">Sit-in History</a>
-            <a href="leaderboards.php">Leaderboards</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+        <a href="admin_dashboard.php" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Admin Dashboard
+        </a>
+        <div class="nav-menu">
+            <a href="announcement.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="student_list.php" class="nav-link"><i class="fas fa-users"></i> Student List</a>
+            <a href="view_feedback.php" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="students.php" class="nav-link"><i class="fas fa-user-check"></i> Sit-in</a>
+            <a href="sitin_view.php" class="nav-link"><i class="fas fa-clock"></i> Current Sit-in</a>
+            <a href="session_history.php" class="nav-link"><i class="fas fa-history"></i> Reports</a>
+            <a href="sitin_history.php" class="nav-link"><i class="fas fa-calendar-alt"></i> History</a>
+            <a href="leaderboards.php" class="nav-link"><i class="fas fa-trophy"></i> Leaderboards</a>
+            <a href="resources.php" class="nav-link"><i class="fas fa-book"></i> Resources</a>
+            <a href="login.php" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
     <div class="container">
-        <h2>Generate Reports</h2>
+        <div class="page-header">
+            <h2><i class="fas fa-history"></i> Generate Reports</h2>
+        </div>
         
         <div class="filter-container">
-            <form method="GET" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <input type="date" name="date" class="date-input" value="<?php echo $selected_date; ?>">
-                <select name="lab" class="date-input">
-                    <option value="">All Labs</option>
-                    <?php while ($lab = mysqli_fetch_assoc($labs_result)): ?>
-                        <option value="<?php echo htmlspecialchars($lab['lab']); ?>" <?php echo $lab_filter == $lab['lab'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($lab['lab']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <select name="purpose" class="date-input">
-                    <option value="">All Purposes</option>
-                    <?php while ($purpose = mysqli_fetch_assoc($purposes_result)): ?>
-                        <option value="<?php echo htmlspecialchars($purpose['purpose']); ?>" <?php echo $purpose_filter == $purpose['purpose'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($purpose['purpose']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <button type="submit" class="btn btn-search">Search</button>
-                <button type="button" class="btn btn-reset" onclick="location.href='session_history.php'">Reset</button>
-                <button type="button" class="btn btn-search" onclick="location.href='session_history.php?show_all=1'">Show All</button>
+            <form method="GET" class="filter-form">
+                <div class="form-grid">
+                    <div class="filter-group">
+                        <label class="filter-label" for="date-filter">Date</label>
+                        <input type="date" id="date-filter" name="date" class="form-control" value="<?php echo $selected_date; ?>">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="lab-filter">Laboratory</label>
+                        <select id="lab-filter" name="lab" class="form-control">
+                            <option value="">All Labs</option>
+                            <?php while ($lab = mysqli_fetch_assoc($labs_result)): ?>
+                                <option value="<?php echo htmlspecialchars($lab['lab']); ?>" 
+                                    <?php echo $lab_filter == $lab['lab'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($lab['lab']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="purpose-filter">Purpose</label>
+                        <select id="purpose-filter" name="purpose" class="form-control">
+                            <option value="">All Purposes</option>
+                            <?php while ($purpose = mysqli_fetch_assoc($purposes_result)): ?>
+                                <option value="<?php echo htmlspecialchars($purpose['purpose']); ?>" 
+                                    <?php echo $purpose_filter == $purpose['purpose'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($purpose['purpose']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="filter-group button-group">
+                        <button type="submit" class="btn btn-search">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <button type="button" class="btn btn-reset" onclick="location.href='session_history.php'">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
 
         <div class="export-buttons">
-            <button class="export-btn" onclick="exportToCSV()">CSV</button>
-            <button class="export-btn" onclick="exportToExcel()">Excel</button>
-            <button class="export-btn" onclick="exportToPDF()">PDF</button>
-            <button class="export-btn" onclick="window.print()">Print</button>
-            <input type="text" class="filter-box" id="filterInput" placeholder="Filter..." onkeyup="filterTable()">
+            <button onclick="exportToCSV()" class="btn btn-export">
+                <i class="fas fa-file-csv"></i> Export to CSV
+            </button>
+            <button onclick="exportToExcel()" class="btn btn-export">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </button>
+            <button onclick="exportToPDF()" class="btn btn-export">
+                <i class="fas fa-file-pdf"></i> Export to PDF
+            </button>
+            <button onclick="printTable()" class="btn btn-export">
+                <i class="fas fa-print"></i> Print
+            </button>
         </div>
 
-        <table id="historyTable">
-            <thead>
-                <tr>
-                    <th>ID Number</th>
-                    <th>Name</th>
-                    <th>Purpose</th>
-                    <th>Laboratory</th>
-                    <th>Login</th>
-                    <th>Logout</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+        <div class="table-responsive">
+            <table>
+                <thead>
                     <tr>
-                        <td><?php echo htmlspecialchars($row['student_id']); ?></td>
-                        <td><?php echo htmlspecialchars($row['full_name']); ?></td>
-                        <td><?php echo htmlspecialchars($row['purpose']); ?></td>
-                        <td><?php echo htmlspecialchars($row['lab']); ?></td>
-                        <td><?php echo htmlspecialchars($row['time_in']); ?></td>
-                        <td><?php echo htmlspecialchars($row['time_out']); ?></td>
-                        <td><?php echo htmlspecialchars($row['date']); ?></td>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Purpose</th>
+                        <th>Laboratory</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Date</th>
                     </tr>
-                <?php } ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php if (mysqli_num_rows($result) > 0): ?>
+                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['student_id']); ?></td>
+                                <td><?php echo htmlspecialchars($row['full_name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['purpose']); ?></td>
+                                <td><?php echo htmlspecialchars($row['lab']); ?></td>
+                                <td><?php echo htmlspecialchars($row['time_in']); ?></td>
+                                <td><?php echo htmlspecialchars($row['time_out']); ?></td>
+                                <td><?php echo htmlspecialchars($row['date']); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7">
+                                <div class="no-records">
+                                    <i class="fas fa-info-circle"></i> No records found
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        function filterTable() {
-            var input = document.getElementById("filterInput");
-            var filter = input.value.toLowerCase();
-            var table = document.getElementById("historyTable");
-            var tr = table.getElementsByTagName("tr");
-
-            for (var i = 1; i < tr.length; i++) {
-                var td = tr[i].getElementsByTagName("td");
-                var found = false;
-                for (var j = 0; j < td.length; j++) {
-                    var cell = td[j];
-                    if (cell) {
-                        var text = cell.textContent || cell.innerText;
-                        if (text.toLowerCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                tr[i].style.display = found ? "" : "none";
-            }
-        }
-
         function exportToCSV() {
-            var table = document.getElementById("historyTable");
-            var rows = table.getElementsByTagName("tr");
-            var csv = [];
-            
-            // Get headers
-            var headerRow = rows[0];
-            var headers = [];
-            for (var i = 0; i < headerRow.cells.length; i++) {
-                headers.push(headerRow.cells[i].innerText);
-            }
-            csv.push(headers.join(","));
-            
-            // Get data rows
-            for (var i = 1; i < rows.length; i++) {
-                var row = rows[i];
-                if (row.style.display !== "none") {
-                    var rowData = [];
-                    for (var j = 0; j < row.cells.length; j++) {
-                        var cell = row.cells[j];
-                        var text = cell.innerText;
-                        // Escape commas and quotes
-                        text = text.replace(/"/g, '""');
-                        if (text.includes(",") || text.includes('"')) {
-                            text = '"' + text + '"';
-                        }
-                        rowData.push(text);
-                    }
-                    csv.push(rowData.join(","));
-                }
-            }
-            
-            // Create and download file
-            var csvContent = csv.join("\n");
-            var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            var link = document.createElement("a");
-            var url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", "session_history.csv");
-            link.style.visibility = "hidden";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            window.location.href = 'export_sitin.php?format=csv';
         }
 
         function exportToExcel() {
-            var table = document.getElementById("historyTable");
-            var wb = XLSX.utils.table_to_book(table, { sheet: "Session History" });
-            XLSX.writeFile(wb, "session_history.xlsx");
+            window.location.href = 'export_sitin.php?format=excel';
         }
 
         function exportToPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.autoTable({
-                html: '#historyTable',
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [20, 76, 148],
-                    textColor: 255,
-                    fontSize: 10
-                },
-                bodyStyles: {
-                    fontSize: 9
-                },
-                margin: { top: 20 },
-                didDrawPage: function(data) {
-                    doc.setFontSize(16);
-                    doc.text("Session History", 14, 15);
-                }
-            });
-            
-            doc.save("session_history.pdf");
+            window.location.href = 'export_sitin.php?format=pdf';
+        }
+
+        function printTable() {
+            window.print();
         }
     </script>
 </body>
-</html> 
+</html>

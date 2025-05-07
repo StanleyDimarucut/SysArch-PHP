@@ -83,6 +83,7 @@ if ($row = mysqli_fetch_assoc($result)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Edit Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -114,140 +115,167 @@ if ($row = mysqli_fetch_assoc($result)) {
         .navbar a {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
+            padding: 8px 16px;
+            border-radius: 8px;
             font-size: 0.95rem;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .navbar a:hover {
+            background: rgba(255,255,255,0.15);
             color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .navbar a.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .navbar a.logout:hover {
+            background: rgba(255,217,0,0.25);
         }
 
         .main-container {
-            margin-top: 80px;
-            padding: 2rem;
             max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 80px auto 30px;
+            padding: 20px;
         }
 
         .card {
             background: white;
-            padding: 2rem;
+            padding: 32px;
             border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
 
         .card h2 {
-            color: #1a1a1a;
-            font-size: 1.5rem;
+            color: #1a5dba;
+            font-size: 24px;
+            margin-bottom: 24px;
             font-weight: 600;
-            margin-bottom: 1.5rem;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .profile-section {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 24px;
         }
 
         .profile-img {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #144c94;
-            margin-bottom: 1rem;
+            margin-bottom: 16px;
+            border: 3px solid #1a5dba;
         }
 
         .file-input-container {
-            margin: 1rem 0;
+            margin: 12px 0;
         }
 
         .file-input-container input[type="file"] {
-            width: 100%;
-            max-width: 300px;
-            padding: 0.5rem;
-            margin: 0 auto;
+            display: none;
+        }
+
+        .file-input-container label {
+            background-color: #1a5dba;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .file-input-container label:hover {
+            background-color: #144c94;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
+            gap: 8px;
         }
 
         .form-group label {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 0.5rem;
             font-weight: 500;
+            color: #444;
+            font-size: 14px;
         }
 
         .form-group input,
         .form-group select {
-            padding: 0.75rem;
-            border: 1px solid #ddd;
+            padding: 10px;
+            border: 1px solid #e5e9ef;
             border-radius: 6px;
-            font-size: 0.95rem;
-            transition: border-color 0.3s ease;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
 
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #144c94;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
         }
 
         .button-container {
             text-align: center;
-            margin-top: 2rem;
         }
 
         .save-button {
-            background-color: #144c94;
+            background-color: #1a5dba;
             color: white;
-            padding: 0.75rem 2rem;
             border: none;
+            padding: 12px 24px;
             border-radius: 6px;
-            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
 
         .save-button:hover {
-            background-color: #0d3a7d;
+            background-color: #144c94;
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1001;
         }
 
         .modal-content {
             background-color: white;
-            margin: 15% auto;
             padding: 2rem;
             border-radius: 12px;
             width: 90%;
             max-width: 400px;
             text-align: center;
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .close {
@@ -255,7 +283,6 @@ if ($row = mysqli_fetch_assoc($result)) {
             right: 1.5rem;
             top: 1rem;
             font-size: 1.5rem;
-            font-weight: bold;
             color: #666;
             cursor: pointer;
             transition: color 0.3s ease;
@@ -269,35 +296,51 @@ if ($row = mysqli_fetch_assoc($result)) {
             color: #28a745;
             font-size: 1.1rem;
             margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .main-container {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="#" style="font-size: 1.2rem; font-weight: 600;">Student Dashboard</a>
+        <a href="#" style="font-size: 1.2rem; font-weight: 600;"><i class="fas fa-home"></i> Student Dashboard</a>
         <div>
-            <a href="dashboard.php">Home</a>
-            <a href="profile.php">Edit Profile</a>
-            <a href="history.php">History</a>
-            <a href="Reservation.php">Reservation</a>
-            <a href="../php/login.php" style="color: #ffd700;">Log out</a>
+            <a href="dashboard.php"><i class="fas fa-home"></i> Home</a>
+            <a href="profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+            <a href="history.php"><i class="fas fa-history"></i> History</a>
+            <a href="student_resources.php"><i class="fas fa-book"></i> Student Resources</a>
+            <a href="Reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>
+            <a href="login.php" class="logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
     <div class="main-container">
         <div class="card">
-            <h2>Edit Profile</h2>
+            <h2><i class="fas fa-user-edit"></i> Edit Profile</h2>
             <form action="profile.php" method="POST" enctype="multipart/form-data">
                 <div class="profile-section">
                     <img src="<?php echo htmlspecialchars($profile_img); ?>" alt="Profile Picture" class="profile-img">
                     <div class="file-input-container">
-                        <input type="file" name="profile_img" accept="image/*">
+                        <label for="profile_img">
+                            <i class="fas fa-camera"></i> Change Profile Picture
+                        </label>
+                        <input type="file" id="profile_img" name="profile_img" accept="image/*">
                     </div>
                 </div>
 
@@ -338,7 +381,9 @@ if ($row = mysqli_fetch_assoc($result)) {
                 </div>
 
                 <div class="button-container">
-                    <button type="submit" class="save-button">Save Changes</button>
+                    <button type="submit" class="save-button">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -348,16 +393,35 @@ if ($row = mysqli_fetch_assoc($result)) {
     <div id="successModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <div class="success-message">Profile updated successfully!</div>
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                Profile updated successfully!
+            </div>
         </div>
     </div>
 
     <script>
+        // Add Font Awesome
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(link);
+
+        // Show filename when file is selected
+        document.getElementById('profile_img').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                const label = document.querySelector('.file-input-container label');
+                label.innerHTML = `<i class="fas fa-camera"></i> ${fileName}`;
+            }
+        });
+
         var modal = document.getElementById("successModal");
         var span = document.getElementsByClassName("close")[0];
 
-        <?php if (isset($_GET["success"])): ?>
-            modal.style.display = "block";
+        // Show modal if success parameter is present
+        <?php if(isset($_GET['success'])): ?>
+        modal.style.display = "block";
         <?php endif; ?>
 
         span.onclick = function() {

@@ -129,8 +129,9 @@ $result = mysqli_stmt_get_result($stmt);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCS | My Sit-in History</title>
+    <title>CCS | History</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -162,26 +163,65 @@ $result = mysqli_stmt_get_result($stmt);
         .navbar a {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
+            padding: 8px 16px;
+            border-radius: 8px;
             font-size: 0.95rem;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .navbar a:hover {
+            background: rgba(255,255,255,0.15);
             color: #ffd700;
+            transform: translateY(-1px);
         }
 
-        .logout-link {
-            color: #ffd700 !important;
+        .navbar a.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
         }
 
-        .container {
+        .navbar a.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
+        .main-container {
             margin-top: 80px;
             padding: 2rem;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .history-grid {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
         }
 
         h2 {
@@ -192,90 +232,81 @@ $result = mysqli_stmt_get_result($stmt);
         }
 
         .filter-container {
-            background: white;
+            background: #f8fafc;
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             margin-bottom: 1.5rem;
         }
 
         .filter-form {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .date-input, select {
-            padding: 0.6rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            padding: 0.6rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background-color: white;
         }
 
         .btn {
             padding: 0.6rem 1.2rem;
             border: none;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .btn-search {
+        .btn-primary {
             background-color: #144c94;
             color: white;
         }
 
-        .btn-search:hover {
-            background-color: #0d3a7d;
-        }
-
-        .btn-reset {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-reset:hover {
-            background-color: #c82333;
+        .btn-primary:hover {
+            background-color: #1a5dba;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         th {
-            background-color: #144c94;
-            color: white;
-            padding: 1rem;
-            text-align: left;
-            font-weight: 500;
-        }
-
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid #f0f2f5;
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #1a1a1a;
         }
 
         tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .no-records {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
+            background-color: #f8fafc;
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .nav-menu {
+                margin-top: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
             .filter-form {
@@ -283,273 +314,138 @@ $result = mysqli_stmt_get_result($stmt);
                 align-items: stretch;
             }
 
-            .date-input, select {
+            .btn {
                 width: 100%;
+                justify-content: center;
             }
-        }
 
-        .btn-feedback {
-            background-color: #144c94;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-feedback:hover {
-            background-color: #0d3a7d;
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Student Dashboard</a>
+        <a href="#" style="font-size: 1.2rem; font-weight: 600;"><i class="fas fa-home"></i> Student Dashboard</a>
         <div>
-            <a href="dashboard.php">Home</a>
-            <a href="profile.php">Edit Profile</a>
-            <a href="history.php">History</a>
-            <a href="Reservation.php">Reservation</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+            <a href="dashboard.php"><i class="fas fa-home"></i> Home</a>
+            <a href="profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+            <a href="history.php"><i class="fas fa-history"></i> History</a>
+            <a href="student_resources.php"><i class="fas fa-book"></i> Student Resources</a>
+            <a href="Reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>
+            <a href="login.php" class="logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
-    <div class="container">
+    <div class="main-container">
         <?php if (isset($_GET["success"])): ?>
             <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
                 <?php echo htmlspecialchars($_GET["success"]); ?>
             </div>
         <?php endif; ?>
 
         <?php if (isset($_GET["error"])): ?>
             <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
                 <?php echo htmlspecialchars($_GET["error"]); ?>
             </div>
         <?php endif; ?>
 
         <div class="history-grid">
             <div class="card">
-                <h2>My Sit-in History</h2>
+                <h2><i class="fas fa-history"></i> My Sit-in History</h2>
                 
                 <div class="filter-container">
                     <form method="GET" class="filter-form">
-                        <input type="date" name="date" class="date-input" value="<?php echo $selected_date; ?>">
-                        <select name="lab" class="date-input">
-                            <option value="">All Labs</option>
-                            <?php while ($lab = mysqli_fetch_assoc($labs_result)): ?>
-                                <option value="<?php echo htmlspecialchars($lab['lab']); ?>" <?php echo $lab_filter == $lab['lab'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($lab['lab']); ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
-                        <select name="purpose" class="date-input">
-                            <option value="">All Purposes</option>
-                            <?php while ($purpose = mysqli_fetch_assoc($purposes_result)): ?>
-                                <option value="<?php echo htmlspecialchars($purpose['purpose']); ?>" <?php echo $purpose_filter == $purpose['purpose'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($purpose['purpose']); ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
-                        <button type="submit" class="btn btn-search">Search</button>
-                        <button type="button" class="btn btn-reset" onclick="location.href='history.php'">Reset</button>
-                        <button type="button" class="btn btn-search" onclick="location.href='history.php?show_all=1'">Show All</button>
+                        <input type="date" name="date" class="date-input" value="<?php echo $selected_date; ?>" aria-label="Select date">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i>
+                            Filter
+                        </button>
                     </form>
                 </div>
 
-                <table id="historyTable">
-                    <thead>
-                        <tr>
-                            <th>Purpose</th>
-                            <th>Laboratory</th>
-                            <th>Login Time</th>
-                            <th>Logout Time</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (mysqli_num_rows($result) > 0): ?>
-                            <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($row['purpose']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['lab']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['time_in']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['time_out'] ?? 'Active'); ?></td>
-                                    <td><?php echo htmlspecialchars($row['date']); ?></td>
-                                    <td>
-                                        <button class="btn-feedback" onclick="openFeedbackModal('<?php echo htmlspecialchars($row['id']); ?>', '<?php echo htmlspecialchars($row['lab']); ?>', '<?php echo htmlspecialchars($row['date']); ?>')">
-                                            Give Feedback
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
+                <div class="table-responsive">
+                    <table id="historyTable">
+                        <thead>
                             <tr>
-                                <td colspan="6" class="no-records">No sit-in records found</td>
+                                <th>Purpose</th>
+                                <th>Laboratory</th>
+                                <th>Login Time</th>
+                                <th>Logout Time</th>
+                                <th>Date</th>
+                                <th>Action</th>
                             </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php if (mysqli_num_rows($result) > 0): ?>
+                                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($row['purpose']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['lab']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['time_in']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['time_out'] ?? 'Active'); ?></td>
+                                        <td><?php echo htmlspecialchars($row['date']); ?></td>
+                                        <td>
+                                            <button class="btn btn-primary" onclick="openFeedbackModal('<?php echo htmlspecialchars($row['id']); ?>', '<?php echo htmlspecialchars($row['lab']); ?>', '<?php echo htmlspecialchars($row['date']); ?>')">
+                                                Give Feedback
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" class="no-records">No sit-in records found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <style>
-        .history-grid {
-            display: block;
-        }
-    </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get the modal and close button after DOM is loaded
-            var modal = document.getElementById("feedbackModal");
-            var span = document.getElementsByClassName("close")[0];
-
-            // When the user clicks the close button, close the modal
-            if (span) {
-                span.onclick = function() {
-                    modal.style.display = "none";
-                }
-            }
-
-            // When the user clicks anywhere outside of the modal, close it
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            }
-
-            window.openFeedbackModal = function(sessionId, lab, date) {
-                document.getElementById('session_id').value = sessionId;
-                document.getElementById('subject').value = `Feedback for ${lab} Session on ${date}`;
-                document.getElementById('message').value = '';
-                document.getElementById('feedback-error').style.display = 'none';
-                document.getElementById('feedback-success').style.display = 'none';
-                modal.style.display = "block";
-            }
-
-            // AJAX feedback submission
-            var feedbackForm = document.getElementById('feedbackForm');
-            if (feedbackForm) {
-                feedbackForm.onsubmit = function(e) {
-                    e.preventDefault();
-                    var formData = new FormData(feedbackForm);
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('POST', 'submit_feedback.php', true);
-                    xhr.onload = function() {
-                        var res = {};
-                        try { res = JSON.parse(xhr.responseText); } catch (e) {}
-                        if (xhr.status === 200 && res.success) {
-                            document.getElementById('feedback-success').innerText = res.success;
-                            document.getElementById('feedback-success').style.display = 'block';
-                            document.getElementById('feedback-error').style.display = 'none';
-                            setTimeout(function() { modal.style.display = 'none'; location.reload(); }, 1200);
-                        } else {
-                            document.getElementById('feedback-error').innerText = res.error || 'Submission failed.';
-                            document.getElementById('feedback-error').style.display = 'block';
-                            document.getElementById('feedback-success').style.display = 'none';
-                        }
-                    };
-                    xhr.send(formData);
-                };
-            }
-        });
-    </script>
-
     <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Submit Feedback</h2>
-            <div id="feedback-success" class="alert alert-success" style="display:none;"></div>
-            <div id="feedback-error" class="alert alert-error" style="display:none;"></div>
-            <form id="feedbackForm" action="submit_feedback.php" method="POST">
-                <input type="hidden" id="session_id" name="session_id">
-                <div class="form-group">
-                    <label for="subject">Subject:</label>
-                    <input type="text" id="subject" name="subject" required>
+    <div id="feedbackModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto;">
+        <div class="modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 500px;">
+            <span class="close" onclick="closeFeedbackModal()" style="float: right; cursor: pointer; font-size: 28px; font-weight: bold;">&times;</span>
+            <h2 style="margin-bottom: 20px; text-align: left;">Give Feedback</h2>
+            <form id="feedbackForm" method="POST" action="history.php" style="text-align: left;">
+                <input type="hidden" name="session_id" id="session_id">
+                <div style="margin-bottom: 15px; text-align: left;">
+                    <label for="subject" style="display: block; margin-bottom: 5px; text-align: left;">Subject:</label>
+                    <input type="text" id="subject" name="subject" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; text-align: left;">
                 </div>
-                <div class="form-group">
-                    <label for="message">Message:</label>
-                    <textarea id="message" name="message" rows="4" required></textarea>
+                <div style="margin-bottom: 15px; text-align: left;">
+                    <label for="message" style="display: block; margin-bottom: 5px; text-align: left;">Message:</label>
+                    <textarea id="message" name="message" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; text-align: left;"></textarea>
                 </div>
-                <button type="submit" class="btn-submit">Submit Feedback</button>
+                <button type="submit" name="submit_feedback" class="btn btn-primary" style="width: 100%;">Submit Feedback</button>
             </form>
         </div>
     </div>
 
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
+    <script>
+        function openFeedbackModal(sessionId, lab, date) {
+            document.getElementById('feedbackModal').style.display = 'block';
+            document.getElementById('session_id').value = sessionId;
+            document.getElementById('subject').value = `Feedback for ${lab} - ${date}`;
         }
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-            position: relative;
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'none';
         }
 
-        .close {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #666;
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            var modal = document.getElementById('feedbackModal');
+            if (event.target == modal) {
+                closeFeedbackModal();
+            }
         }
-
-        .close:hover {
-            color: #000;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .btn-submit {
-            background-color: #144c94;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-submit:hover {
-            background-color: #0d3a7d;
-        }
-    </style>
+    </script>
 </body>
 </html>

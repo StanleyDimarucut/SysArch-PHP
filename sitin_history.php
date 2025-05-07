@@ -66,207 +66,382 @@ $labs_result = mysqli_query($con, $labs_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Sit-in History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: rgb(230, 233, 241);
+            background-color: #f0f2f5;
         }
+
         .navbar {
-            background-color: #144c94;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .navbar a {
+
+        .navbar-brand {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
-        .navbar a:hover {
-            color: yellow;
+
+        .navbar-brand:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
         }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
         .container {
             width: 95%;
+            max-width: 1400px;
             margin: 20px auto;
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
-        .filter-container {
+
+        .page-header {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 24px;
         }
-        .date-input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        .page-header h2 {
+            color: #1a5dba;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+
+        .filter-container {
+            margin-bottom: 24px;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
             font-size: 14px;
+            font-weight: 500;
+            color: #444;
         }
-        .btn-search {
-            background-color: #007bff;
-            color: white;
+
+        .form-control {
+            padding: 10px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.3s ease;
         }
-        .btn-reset {
-            background-color: #dc3545;
-            color: white;
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
         }
-        .export-buttons {
-            margin-bottom: 20px;
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
         }
-        .export-btn {
-            padding: 6px 12px;
-            margin-right: 5px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 4px;
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+
+        .btn-search {
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            color: white;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
+        }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 16px;
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
+            padding: 16px;
             text-align: left;
+            border-bottom: 1px solid #e5e9ef;
+            font-size: 14px;
         }
+
         th {
-            background-color: #144c94;
-            color: white;
+            background-color: #f8fafc;
+            color: #1a5dba;
+            font-weight: 600;
+            white-space: nowrap;
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
+
+        td {
+            color: #444;
         }
-        .filter-box {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-left: 10px;
+
+        tbody tr:hover {
+            background-color: #f8fafc;
         }
-        
+
         .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        
+
         .status-present {
-            background-color: #28a745;
-            color: white;
+            background-color: #dcfce7;
+            color: #166534;
         }
-        
+
         .status-absent {
-            background-color: #dc3545;
-            color: white;
+            background-color: #fee2e2;
+            color: #991b1b;
         }
 
         @media (max-width: 768px) {
-            .filter-container {
+            .navbar {
+                padding: 15px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .container {
+                width: 90%;
+                padding: 16px;
+            }
+
+            .page-header {
                 flex-direction: column;
-                align-items: stretch;
+                gap: 16px;
+                align-items: flex-start;
             }
 
-            .export-buttons {
-                flex-wrap: wrap;
+            .filter-form {
+                grid-template-columns: 1fr;
             }
 
-            .filter-box {
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
                 width: 100%;
+            }
+
+            th, td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
-        <div>
-            <a href="announcement.php">Announcements</a>
-            <a href="student_list.php">View Student List</a>
-            <a href="view_feedback.php">Feedback</a>
-            <a href="students.php">Sit-in</a>
-            <a href="sitin_view.php">Current Sit-in</a>
-            <a href="session_history.php">Sit-in Reports</a>
-            <a href="sitin_history.php">Sit-in History</a>
-            <a href="leaderboards.php">Leaderboards</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+        <a href="admin_dashboard.php" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Admin Dashboard
+        </a>
+        <div class="nav-menu">
+            <a href="announcement.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="student_list.php" class="nav-link"><i class="fas fa-users"></i> Student List</a>
+            <a href="view_feedback.php" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="students.php" class="nav-link"><i class="fas fa-user-check"></i> Sit-in</a>
+            <a href="sitin_view.php" class="nav-link"><i class="fas fa-clock"></i> Current Sit-in</a>
+            <a href="session_history.php" class="nav-link"><i class="fas fa-history"></i> Reports</a>
+            <a href="sitin_history.php" class="nav-link"><i class="fas fa-calendar-alt"></i> History</a>
+            <a href="leaderboards.php" class="nav-link"><i class="fas fa-trophy"></i> Leaderboards</a>
+            <a href="resources.php" class="nav-link"><i class="fas fa-book"></i> Resources</a>
+            <a href="login.php" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
     <div class="container">
-        <h2>Sit-in History</h2>
+        <div class="page-header">
+            <h2><i class="fas fa-calendar-alt"></i> Sit-in History</h2>
+        </div>
         
         <div class="filter-container">
-            <form method="GET" style="display: flex; gap: 10px; align-items: center;">
-                <input type="date" name="date" class="date-input" value="<?php echo $date_filter; ?>">
-                <input type="text" name="student" class="date-input" placeholder="Search by ID or name" value="<?php echo $student_filter; ?>">
-                <select name="lab" class="date-input">
-                    <option value="">All Labs</option>
-                    <?php while ($lab = mysqli_fetch_assoc($labs_result)): ?>
-                        <option value="<?php echo htmlspecialchars($lab['lab']); ?>" <?php echo $lab_filter == $lab['lab'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($lab['lab']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <button type="submit" class="btn btn-search">Search</button>
-                <button type="button" class="btn btn-reset" onclick="location.href='sitin_history.php'">Reset</button>
+            <form method="GET" class="filter-form">
+                <div class="filter-group">
+                    <label class="filter-label" for="date-filter">Date</label>
+                    <input type="date" id="date-filter" name="date" class="form-control" value="<?php echo $date_filter; ?>">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="student-filter">Student</label>
+                    <input type="text" id="student-filter" name="student" class="form-control" placeholder="Search by ID or name" value="<?php echo $student_filter; ?>">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="lab-filter">Laboratory</label>
+                    <select id="lab-filter" name="lab" class="form-control">
+                        <option value="">All Labs</option>
+                        <?php while ($lab = mysqli_fetch_assoc($labs_result)): ?>
+                            <option value="<?php echo htmlspecialchars($lab['lab']); ?>" <?php echo $lab_filter == $lab['lab'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($lab['lab']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="filter-group button-group">
+                    <button type="submit" class="btn btn-search">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button type="button" class="btn btn-reset" onclick="location.href='sitin_history.php'">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
             </form>
         </div>
 
-        <table id="historyTable">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Student ID</th>
-                    <th>Name</th>
-                    <th>Course & Year</th>
-                    <th>Laboratory</th>
-                    <th>Purpose</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (mysqli_num_rows($result) > 0): ?>
-                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Course & Year</th>
+                        <th>Laboratory</th>
+                        <th>Purpose</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (mysqli_num_rows($result) > 0): ?>
+                        <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                            <tr>
+                                <td><?php echo date('M d, Y', strtotime($row['date'])); ?></td>
+                                <td><?php echo htmlspecialchars($row['student_id']); ?></td>
+                                <td><?php echo htmlspecialchars($row['student_name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['COURSE'] . ' ' . $row['YEARLEVEL']); ?></td>
+                                <td><?php echo htmlspecialchars($row['lab']); ?></td>
+                                <td><?php echo htmlspecialchars($row['purpose']); ?></td>
+                                <td><?php echo date('h:i A', strtotime($row['time_in'])); ?></td>
+                                <td><?php echo $row['time_out'] ? date('h:i A', strtotime($row['time_out'])) : 'Ongoing'; ?></td>
+                                <td>
+                                    <span class="status-badge <?php echo $row['time_out'] ? 'status-present' : 'status-absent'; ?>">
+                                        <i class="fas <?php echo $row['time_out'] ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
+                                        <?php echo $row['time_out'] ? 'Completed' : 'Active'; ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?php echo date('M d, Y', strtotime($row['date'])); ?></td>
-                            <td><?php echo htmlspecialchars($row['student_id']); ?></td>
-                            <td><?php echo htmlspecialchars($row['student_name']); ?></td>
-                            <td><?php echo htmlspecialchars($row['COURSE'] . ' ' . $row['YEARLEVEL']); ?></td>
-                            <td><?php echo htmlspecialchars($row['lab']); ?></td>
-                            <td><?php echo htmlspecialchars($row['purpose']); ?></td>
-                            <td><?php echo date('h:i A', strtotime($row['time_in'])); ?></td>
-                            <td><?php echo $row['time_out'] ? date('h:i A', strtotime($row['time_out'])) : 'Ongoing'; ?></td>
-                            <td>
-                                <span class="status-badge <?php echo $row['time_out'] ? 'status-present' : 'status-absent'; ?>">
-                                    <?php echo $row['time_out'] ? 'Completed' : 'Active'; ?>
-                                </span>
+                            <td colspan="9" style="text-align: center; padding: 40px;">
+                                <div style="color: #666; font-size: 15px;">
+                                    <i class="fas fa-info-circle"></i> No records found
+                                </div>
                             </td>
                         </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="9" style="text-align: center;">No records found</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -279,6 +454,7 @@ $labs_result = mysqli_query($con, $labs_query);
             for (var i = 1; i < tr.length; i++) {
                 var td = tr[i].getElementsByTagName("td");
                 var found = false;
+
                 for (var j = 0; j < td.length; j++) {
                     var cell = td[j];
                     if (cell) {
@@ -293,22 +469,6 @@ $labs_result = mysqli_query($con, $labs_query);
             }
         }
 
-        function exportToCSV() {
-            window.location.href = 'export_sitin.php?format=csv';
-        }
-
-        function exportToExcel() {
-            window.location.href = 'export_sitin.php?format=excel';
-        }
-
-        function exportToPDF() {
-            window.location.href = 'export_sitin.php?format=pdf';
-        }
-
-        function printTable() {
-            window.print();
-        }
-
         // Show error message if present
         <?php if (isset($_GET["error"])): ?>
         window.onload = function() {
@@ -317,4 +477,4 @@ $labs_result = mysqli_query($con, $labs_query);
         <?php endif; ?>
     </script>
 </body>
-</html> 
+</html>

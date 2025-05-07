@@ -44,7 +44,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["sitin_submit"])) {
     $student_id = $_POST["id_number"];
     $purpose = $_POST["purpose"];
     $lab = $_POST["lab"];
-    $date = date('Y-m-d');
     
     // Check if student has remaining sessions
     $sessions_query = "SELECT remaining_sessions FROM register WHERE IDNO = ?";
@@ -71,18 +70,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["sitin_submit"])) {
         exit();
     }
 
-    // Insert sit-in record with current time
-    $insert_query = "INSERT INTO sit_in_records (student_id, date, purpose, lab, time_in) 
-                    VALUES (?, ?, ?, ?, CURRENT_TIME())";
-    $insert_stmt = mysqli_prepare($con, $insert_query);
-    mysqli_stmt_bind_param($insert_stmt, "ssss", $student_id, $date, $purpose, $lab);
+    // Begin transaction
+    mysqli_begin_transaction($con);
     
-    if (mysqli_stmt_execute($insert_stmt)) {
+    try {
+        // Insert sit-in record with current time
+        $insert_query = "INSERT INTO sit_in_records (student_id, date, purpose, lab, time_in) VALUES (?, CURDATE(), ?, ?, CURRENT_TIME())";
+        $insert_stmt = mysqli_prepare($con, $insert_query);
+        mysqli_stmt_bind_param($insert_stmt, "sss", $student_id, $purpose, $lab);
+        
+        if (!mysqli_stmt_execute($insert_stmt)) {
+            throw new Exception("Failed to create sit-in record");
+        }
+
+        mysqli_commit($con);
         header("Location: students.php?success=Student successfully logged in");
-    } else {
-        header("Location: students.php?error=Failed to create sit-in record");
+        exit();
+    } catch (Exception $e) {
+        mysqli_rollback($con);
+        header("Location: students.php?error=" . urlencode($e->getMessage()));
+        exit();
     }
-    exit();
 }
 
 // Handle session reset
@@ -166,49 +174,174 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Students</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: rgb(230, 233, 241);
+            background-color: #f0f2f5;
         }
+
         .navbar {
-            background-color: #144c94;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
-        }
-        .navbar a:hover {
-            color: yellow;
-        }
-        .container {
-            width: 80%;
-            margin: 30px auto;
-        }
-        .btn-modal {
-            background-color: #144c94;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-        .btn-modal:hover {
-            background-color: #0f3c7a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        /* Modal Styles */
+        .navbar-brand {
+            color: white;
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .nav-link i {
+            font-size: 14px;
+        }
+
+        .nav-link.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a5dba;
+            margin: 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+        }
+
+        .search-section {
+            display: flex;
+            justify-content: center;
+            margin: 24px 0;
+        }
+
+        .btn-modal {
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -218,269 +351,253 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            backdrop-filter: blur(4px);
         }
 
         .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 350px;
-            text-align: center;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
             position: relative;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 50px auto;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
         }
 
         .modal-close {
             position: absolute;
-            top: 10px;
-            right: 15px;
+            top: 20px;
+            right: 20px;
             font-size: 24px;
+            color: #666;
             cursor: pointer;
+            transition: color 0.3s ease;
         }
 
         .modal-close:hover {
-            color: red;
+            color: #dc3545;
         }
 
         .search-box {
-            width: 90%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
-        .btn-search {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .btn-search:hover {
-            background-color: #0056b3;
-        }
-
-        table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #144c94;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .status-present {
-            color: green;
-            font-weight: bold;
-        }
-        .status-absent {
-            color: red;
-            font-weight: bold;
-        }
-        .btn-status {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin: 2px;
-        }
-        .btn-present {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-absent {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-box {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #144c94;
-            margin: 10px 0;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .chart-container {
-            width: 100%;
-            max-width: 500px;
-            height: 300px;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .table-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-top: 30px;
-        }
-
-        .table-container h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #144c94;
-        }
-
-        .table-container .search-box {
-            width: 300px;
-            margin-bottom: 20px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        #studentsTable {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        #studentsTable th {
-            background-color: #144c94;
-            color: white;
             padding: 12px;
-            text-align: left;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
         }
 
-        #studentsTable td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
+        .search-box:focus {
+            outline: none;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
         }
 
-        #studentsTable tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        #studentsTable tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        /* Sit In Form Styles */
         .sitin-form {
-            margin-top: 20px;
+            margin-top: 24px;
         }
-        
+
+        .sitin-form h4 {
+            color: #1a5dba;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
         .form-group {
-            margin-bottom: 15px;
-            text-align: left;
+            margin-bottom: 20px;
         }
-        
+
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            color: #444;
             font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
         }
-        
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
+        }
+
+        .form-group input[readonly] {
+            background-color: #f8fafc;
+            color: #666;
+        }
+
         .btn-container {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 24px;
         }
-        
-        .btn-sitin {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
+
         .btn-close {
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 20px;
+            background-color: #e5e9ef;
+            color: #444;
+            padding: 10px 20px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-close:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-sitin {
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-sitin:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
+        }
+
+        .btn-reset {
+            background-color: #28a745;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .btn-reset:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out forwards, fadeOut 0.5s ease-out 3s forwards;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .alert-error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                margin: 20px auto;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .btn-close, .btn-sitin {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-
     <div class="navbar">
-        <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
-        <div>
-            <a href="announcement.php">Announcements</a>
-            <a href="student_list.php">View Student List</a>
-            <a href="view_feedback.php">Feedback</a>
-            <a href="students.php">Sit-in</a>
-            <a href="sitin_view.php">Current Sit-in</a>
-            <a href="session_history.php">Sit-in Reports</a>
-            <a href="sitin_history.php">Sit-in History</a>
-            <a href="leaderboards.php">Leaderboards</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+        <a href="admin_dashboard.php" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Admin Dashboard
+        </a>
+        <div class="nav-menu">
+            <a href="announcement.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="student_list.php" class="nav-link"><i class="fas fa-users"></i> Student List</a>
+            <a href="view_feedback.php" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="students.php" class="nav-link"><i class="fas fa-user-check"></i> Sit-in</a>
+            <a href="sitin_view.php" class="nav-link"><i class="fas fa-clock"></i> Current Sit-in</a>
+            <a href="session_history.php" class="nav-link"><i class="fas fa-history"></i> Reports</a>
+            <a href="sitin_history.php" class="nav-link"><i class="fas fa-calendar-alt"></i> History</a>
+            <a href="leaderboards.php" class="nav-link"><i class="fas fa-trophy"></i> Leaderboards</a>
+            <a href="resources.php" class="nav-link"><i class="fas fa-book"></i> Resources</a>
+            <a href="login.php" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
     <div class="container">
         <div class="stats-container">
             <div class="stat-box">
-                <div class="stat-label">Students Registered</div>
+                <div class="stat-label"><i class="fas fa-user-graduate"></i> Students Registered</div>
                 <div class="stat-number"><?php echo $total_students; ?></div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">Currently Sit-in</div>
+                <div class="stat-label"><i class="fas fa-user-clock"></i> Currently Sit-in</div>
                 <div class="stat-number"><?php echo $current_sitin; ?></div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">Total Sit-in</div>
+                <div class="stat-label"><i class="fas fa-calendar-check"></i> Total Sit-in</div>
                 <div class="stat-number"><?php echo $total_sitin; ?></div>
             </div>
         </div>
 
-        <div style="text-align: center; margin: 20px 0;">
-            <button class="btn-modal" onclick="openModal()">Search Student for Sit-in</button>
+        <div class="search-section">
+            <button class="btn-modal" onclick="openModal()">
+                <i class="fas fa-search"></i> Search Student for Sit-in
+            </button>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="courseDistribution"></canvas>
         </div>
     </div>
 
@@ -491,16 +608,17 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
             <?php if (!isset($search_result) || !$search_result || mysqli_num_rows($search_result) == 0): ?>
                 <h3>Search Student</h3>
                 <form method="GET">
-                    <input type="text" name="search" class="search-box" placeholder="Search ID Number..." value="<?php echo htmlspecialchars($search_query); ?>">
-                    <button type="submit" class="btn-search">Search</button>
+                    <input type="text" name="search" class="search-box" placeholder="Enter ID Number..." value="<?php echo htmlspecialchars($search_query); ?>" required>
+                    <div class="btn-container">
+                        <button type="submit" class="btn-sitin">Search</button>
+                    </div>
                 </form>
                 <?php if (isset($_GET["search"])): ?>
-                    <p>No student found with that ID number.</p>
+                    <p style="color: #dc3545; margin-top: 16px; text-align: center;">No student found with that ID number.</p>
                 <?php endif; ?>
             <?php else: ?>
                 <?php 
                 $student = mysqli_fetch_assoc($search_result);
-                // Check if student has an active session today
                 $session_check = "SELECT * FROM sit_in_records WHERE student_id = ? AND date = CURDATE() AND time_out IS NULL";
                 $session_stmt = mysqli_prepare($con, $session_check);
                 mysqli_stmt_bind_param($session_stmt, "s", $student['IDNO']);
@@ -522,17 +640,17 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                             <label>Remaining Sessions:</label>
                             <input type="text" value="<?php echo htmlspecialchars($student['remaining_sessions']); ?>" readonly>
                             <?php if ($student['remaining_sessions'] <= 0): ?>
-                                <small style="color: red; display: block; margin-top: 5px;">No sessions remaining</small>
+                                <small style="color: #dc3545; display: block; margin-top: 8px;">No sessions remaining</small>
                             <?php endif; ?>
                         </div>
                         <div class="form-group">
                             <label>Session Status:</label>
                             <?php if (mysqli_num_rows($session_result) > 0): ?>
-                                <input type="text" value="Already has an active session today" readonly style="color: red;">
+                                <input type="text" value="Already has an active session today" readonly style="color: #dc3545;">
                             <?php elseif ($student['remaining_sessions'] <= 0): ?>
-                                <input type="text" value="No sessions remaining" readonly style="color: red;">
+                                <input type="text" value="No sessions remaining" readonly style="color: #dc3545;">
                             <?php else: ?>
-                                <input type="text" value="Available for session" readonly style="color: green;">
+                                <input type="text" value="Available for session" readonly style="color: #28a745;">
                             <?php endif; ?>
                         </div>
                         <?php if ($student['remaining_sessions'] > 0 && mysqli_num_rows($session_result) == 0): ?>
@@ -540,10 +658,18 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                                 <label>Purpose:</label>
                                 <select name="purpose" required>
                                     <option value="">Select Purpose</option>
+                                    <option value="C Programming">C Programming</option>
                                     <option value="C#">C#</option>
-                                    <option value="PHP">PHP</option>
                                     <option value="Java">Java</option>
-                                    <option value="HTML">HTML</option>
+                                    <option value="PHP">PHP</option>
+                                    <option value="Database">Database</option>
+                                    <option value="Digital Logic & Design">Digital Logic & Design</option>
+                                    <option value="Embeded Systems & IoT">Embeded Systems & IoT</option>
+                                    <option value="Python Programming">Python Programming</option>
+                                    <option value="Systems Integration & Architecture">Systems Integration & Architecture</option>
+                                    <option value="Computer Application">Computer Application</option>
+                                    <option value="Web Design & Development">Web Design & Development</option>
+                                    <option value="Project Management">Project Management</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -553,56 +679,86 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
                                     <option value="524">524</option>
                                     <option value="526">526</option>
                                     <option value="528">528</option>
+                                    <option value="530">530</option>
+                                    <option value="542">542</option>
+                                    <option value="544">544</option>
+                                    <option value="517">517</option>
                                 </select>
                             </div>
                         <?php endif; ?>
                         <div class="btn-container">
                             <button type="button" class="btn-close" onclick="closeModal()">Close</button>
                             <?php if ($student['remaining_sessions'] > 0 && mysqli_num_rows($session_result) == 0): ?>
-                                <button type="submit" name="sitin_submit" class="btn-sitin">Sit In</button>
+                                <button type="submit" name="sitin_submit" class="btn-sitin">
+                                    <i class="fas fa-sign-in-alt"></i> Sit In
+                                </button>
                             <?php endif; ?>
                         </div>
-                    </form>
-                    
-                    <!-- Add Reset Sessions Form -->
-                    <form method="POST" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                        <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($student['IDNO']); ?>">
-                        <button type="submit" name="reset_sessions" class="btn-sitin" style="width: 100%; background-color: #28a745;">
-                            Reset Sessions to 30
-                        </button>
+
+                        <?php if ($student['remaining_sessions'] <= 0): ?>
+                            <button type="submit" name="reset_sessions" class="btn-reset">
+                                <i class="fas fa-sync-alt"></i> Reset Sessions to 30
+                            </button>
+                        <?php endif; ?>
                     </form>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 
-    <script>
-        function filterStudents() {
-            var input = document.getElementById("studentFilter");
-            var filter = input.value.toLowerCase();
-            var table = document.getElementById("studentsTable");
-            var tr = table.getElementsByTagName("tr");
+    <?php if (isset($_GET["success"])): ?>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET["success"]); ?>
+        </div>
+    <?php endif; ?>
 
-            for (var i = 1; i < tr.length; i++) {
-                var td = tr[i].getElementsByTagName("td");
-                var found = false;
-                for (var j = 0; j < td.length; j++) {
-                    var cell = td[j];
-                    if (cell) {
-                        var text = cell.textContent || cell.innerText;
-                        if (text.toLowerCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
+    <?php if (isset($_GET["error"])): ?>
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET["error"]); ?>
+        </div>
+    <?php endif; ?>
+
+    <script>
+        // Course Distribution Chart
+        var ctx = document.getElementById('courseDistribution').getContext('2d');
+        var courseChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: <?php echo json_encode($course_labels); ?>,
+                datasets: [{
+                    data: <?php echo json_encode($course_counts); ?>,
+                    backgroundColor: [
+                        '#4299e1',
+                        '#48bb78',
+                        '#ed8936',
+                        '#ed64a6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Course Distribution',
+                        font: {
+                            size: 16
                         }
                     }
+                },
+                layout: {
+                    padding: 20
                 }
-                tr[i].style.display = found ? "" : "none";
             }
-        }
+        });
 
+        // Modal functions
         function openModal() {
             document.getElementById("searchModal").style.display = "flex";
-            // Clear any existing search results
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('search')) {
                 window.history.replaceState({}, '', window.location.pathname);
@@ -611,7 +767,6 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
 
         function closeModal() {
             document.getElementById("searchModal").style.display = "none";
-            // Clear any existing search results
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('search')) {
                 window.history.replaceState({}, '', window.location.pathname);
@@ -626,13 +781,16 @@ if (isset($_GET["search"]) && !empty(trim($_GET["search"]))) {
             }
         }
 
-        // Show error message if present
         <?php if (isset($_GET["error"])): ?>
         window.onload = function() {
-            alert("<?php echo htmlspecialchars($_GET["error"]); ?>");
+            setTimeout(function() {
+                var alerts = document.getElementsByClassName('alert');
+                for(var i = 0; i < alerts.length; i++) {
+                    alerts[i].style.display = 'none';
+                }
+            }, 3000);
         }
         <?php endif; ?>
     </script>
-
 </body>
 </html>

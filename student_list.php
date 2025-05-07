@@ -38,87 +38,216 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"]))
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCS | Student List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: rgb(230, 233, 241);
+            background-color: #f0f2f5;
         }
+
         .navbar {
-            background-color: #144c94;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .navbar a {
+
+        .navbar-brand {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
-        .navbar a:hover {
-            color: yellow;
+
+        .navbar-brand:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
         }
-        .container {
-            width: 80%;
-            margin: 30px auto;
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
-        .table-container {
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .nav-link i {
+            font-size: 14px;
+        }
+
+        .nav-link.logout {
+            background: rgba(255,217,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,217,0,0.3);
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(255,217,0,0.25);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .main-container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0;
+        }
+
+        .page-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-header h1 {
+            color: #1a5dba;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .search-container {
             background: white;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        .table-container h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #144c94;
-        }
+
         .search-box {
-            width: 300px;
-            margin-bottom: 20px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
             font-size: 14px;
+            transition: all 0.3s ease;
+            min-width: 200px;
         }
-        #studentsTable {
+
+        .search-box:focus {
+            outline: none;
+            border-color: #1a5dba;
+            box-shadow: 0 0 0 3px rgba(26,93,186,0.1);
+        }
+
+        .filter-select {
+            padding: 12px;
+            border: 1px solid #e5e9ef;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+            background: white;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 1rem;
         }
-        #studentsTable th {
-            background-color: #144c94;
-            color: white;
+
+        th, td {
             padding: 12px;
             text-align: left;
+            border-bottom: 1px solid #e5e9ef;
         }
-        #studentsTable td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-        }
-        #studentsTable tr:hover {
-            background-color: #f5f5f5;
-        }
-        #studentsTable tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .btn-reset {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 12px;
-            cursor: pointer;
+
+        th {
+            background-color: #f8fafc;
+            color: #1a5dba;
+            font-weight: 600;
             font-size: 14px;
-            transition: background-color 0.3s ease;
         }
-        .btn-reset:hover {
-            background-color: #218838;
+
+        td {
+            color: #444;
+            font-size: 14px;
         }
-        
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
         .alert {
             position: fixed;
             top: 20px;
@@ -130,12 +259,50 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"]))
             z-index: 1000;
             animation: slideIn 0.5s ease-out forwards, fadeOut 0.5s ease-out 3s forwards;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .alert-success {
             background-color: #28a745;
             color: white;
+        }
+
+        .btn-reset {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             border: none;
+        }
+
+        .btn-reset-individual {
+            background-color: #1a5dba;
+            color: white;
+        }
+
+        .btn-reset-individual:hover {
+            background-color: #144c94;
+            transform: translateY(-1px);
+        }
+
+        .btn-reset-all {
+            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .btn-reset-all:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,93,186,0.2);
         }
 
         @keyframes slideIn {
@@ -158,36 +325,100 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"]))
                 visibility: hidden;
             }
         }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                width: 100%;
+                padding: 15px 0;
+                margin-top: 15px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .nav-menu.active {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 8px;
+            }
+
+            .navbar {
+                flex-wrap: wrap;
+            }
+
+            .navbar-brand {
+                flex: 1;
+            }
+
+            .nav-link {
+                justify-content: center;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .search-box, .filter-select {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="admin_dashboard.php" style="font-size: 1.2rem; font-weight: 600;">Admin Dashboard</a>
-        <div>
-            <a href="announcement.php">Announcements</a>
-            <a href="student_list.php">View Student List</a>
-            <a href="view_feedback.php">View Feedback</a>
-            <a href="students.php">Sit-in</a>
-            <a href="sitin_view.php">Current Sit-in</a>
-            <a href="session_history.php">Sit-in Reports</a>
-            <a href="sitin_history.php">Sit-in History</a>
-            <a href="leaderboards.php">Leaderboards</a>
-            <a href="login.php" style="color: #ffd700;">Log out</a>
+        <a href="admin_dashboard.php" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Admin Dashboard
+        </a>
+        <div class="mobile-menu-toggle" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+        <div class="nav-menu">
+            <a href="announcement.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="student_list.php" class="nav-link"><i class="fas fa-users"></i> Student List</a>
+            <a href="view_feedback.php" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="students.php" class="nav-link"><i class="fas fa-user-check"></i> Sit-in</a>
+            <a href="sitin_view.php" class="nav-link"><i class="fas fa-clock"></i> Current Sit-in</a>
+            <a href="session_history.php" class="nav-link"><i class="fas fa-history"></i> Reports</a>
+            <a href="sitin_history.php" class="nav-link"><i class="fas fa-calendar-alt"></i> History</a>
+            <a href="leaderboards.php" class="nav-link"><i class="fas fa-trophy"></i> Leaderboards</a>
+            <a href="resources.php" class="nav-link"><i class="fas fa-book"></i> Resources</a>
+            <a href="login.php" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
     </div>
 
-    <div class="container">
-        <div class="table-container">
-            <h3>Registered Students</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <input type="text" id="studentFilter" class="search-box" onkeyup="filterStudents()" placeholder="Search students...">
-                <form method="POST" style="margin: 0;">
-                    <button type="submit" name="reset_all_sessions" class="btn-reset" onclick="return confirm('Are you sure you want to reset ALL students\' sessions to 30?')">
-                        Reset All Sessions
-                    </button>
-                </form>
-            </div>
-            <table id="studentsTable">
+    <div class="main-container">
+        <div class="page-header">
+            <h1><i class="fas fa-users"></i> Student List</h1>
+            <form method="POST" onsubmit="return confirmResetAll()">
+                <button type="submit" name="reset_all_sessions" class="btn-reset btn-reset-all">
+                    <i class="fas fa-sync-alt"></i> Reset All Sessions
+                </button>
+            </form>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-box" placeholder="Search by name, ID, or course...">
+            <select class="filter-select" id="courseFilter">
+                <option value="">All Courses</option>
+                <option value="BSCS">BSCS</option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSIS">BSIS</option>
+            </select>
+            <select class="filter-select" id="yearFilter">
+                <option value="">All Years</option>
+                <option value="1ST YEAR">1st Year</option>
+                <option value="2ND YEAR">2nd Year</option>
+                <option value="3RD YEAR">3rd Year</option>
+                <option value="4TH YEAR">4th Year</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <table>
                 <thead>
                     <tr>
                         <th>ID Number</th>
@@ -195,6 +426,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"]))
                         <th>Course</th>
                         <th>Year Level</th>
                         <th>Remaining Sessions</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -208,13 +440,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"]))
                         echo "<td>" . htmlspecialchars($student['FIRSTNAME'] . ' ' . $student['LASTNAME']) . "</td>";
                         echo "<td>" . htmlspecialchars($student['COURSE']) . "</td>";
                         echo "<td>" . htmlspecialchars($student['YEARLEVEL']) . "</td>";
-                        echo "<td style='" . ($student['remaining_sessions'] <= 5 ? 'color: #dc3545; font-weight: bold;' : 'color: #28a745; font-weight: bold;') . "'>" . htmlspecialchars($student['remaining_sessions']) . "</td>";
-                        echo "<td>
-                                <form method='POST' style='display: inline;'>
-                                    <input type='hidden' name='student_id' value='" . htmlspecialchars($student['IDNO']) . "'>
-                                    <button type='submit' name='reset_sessions' class='btn-reset' onclick='return confirm(\"Are you sure you want to reset this student's sessions to 30?\")'>Reset Sessions</button>
-                                </form>
-                              </td>";
+                        echo "<td>" . htmlspecialchars($student['remaining_sessions']) . "</td>";
+                        echo "<td>";
+                        if ($student['remaining_sessions'] > 0) {
+                            echo "<span class='status-badge status-active'><i class='fas fa-check-circle'></i> Active</span>";
+                        } else {
+                            echo "<span class='status-badge status-inactive'><i class='fas fa-times-circle'></i> Inactive</span>";
+                        }
+                        echo "</td>";
+                        echo "<td>";
+                        echo "<form method='POST' style='display: inline;' onsubmit='return confirmReset(\"" . htmlspecialchars($student['FIRSTNAME'] . ' ' . $student['LASTNAME']) . "\")'>";
+                        echo "<input type='hidden' name='student_id' value='" . htmlspecialchars($student['IDNO']) . "'>";
+                        echo "<button type='submit' name='reset_sessions' class='btn-reset btn-reset-individual'>";
+                        echo "<i class='fas fa-sync-alt'></i> Reset Sessions";
+                        echo "</button>";
+                        echo "</form>";
+                        echo "</td>";
                         echo "</tr>";
                     }
                     ?>
@@ -230,34 +471,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["reset_all_sessions"]))
     <?php endif; ?>
 
     <script>
-        // Add Font Awesome for the check icon
-        var fontAwesome = document.createElement('link');
-        fontAwesome.rel = 'stylesheet';
-        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
-        document.head.appendChild(fontAwesome);
-
-        function filterStudents() {
-            var input = document.getElementById("studentFilter");
-            var filter = input.value.toLowerCase();
-            var table = document.getElementById("studentsTable");
-            var tr = table.getElementsByTagName("tr");
-
-            for (var i = 1; i < tr.length; i++) {
-                var td = tr[i].getElementsByTagName("td");
-                var found = false;
-                for (var j = 0; j < td.length; j++) {
-                    var cell = td[j];
-                    if (cell) {
-                        var text = cell.textContent || cell.innerText;
-                        if (text.toLowerCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                tr[i].style.display = found ? "" : "none";
-            }
+        function toggleMenu() {
+            const menu = document.querySelector('.nav-menu');
+            menu.classList.toggle('active');
         }
+
+        function confirmReset(studentName) {
+            return confirm(`Are you sure you want to reset the sessions for ${studentName} to 30?`);
+        }
+
+        function confirmResetAll() {
+            return confirm('Are you sure you want to reset all students\' sessions to 30? This action cannot be undone.');
+        }
+
+        // Filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const courseFilter = document.getElementById('courseFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCourse = courseFilter.value;
+            const selectedYear = yearFilter.value;
+
+            tableRows.forEach(row => {
+                const name = row.children[1].textContent.toLowerCase();
+                const id = row.children[0].textContent.toLowerCase();
+                const course = row.children[2].textContent;
+                const year = row.children[3].textContent;
+
+                const matchesSearch = name.includes(searchTerm) || id.includes(searchTerm);
+                const matchesCourse = !selectedCourse || course === selectedCourse;
+                const matchesYear = !selectedYear || year === selectedYear;
+
+                row.style.display = matchesSearch && matchesCourse && matchesYear ? '' : 'none';
+            });
+        }
+
+        searchInput.addEventListener('input', filterTable);
+        courseFilter.addEventListener('change', filterTable);
+        yearFilter.addEventListener('change', filterTable);
     </script>
 </body>
-</html> 
+</html>

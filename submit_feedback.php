@@ -5,32 +5,25 @@ include("db.php");
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $subject = trim($_POST["subject"]);
     $message = trim($_POST["message"]);
-    $session_id = $_POST["session_id"];
+    $room = trim($_POST["room"]);
+    $purpose = trim($_POST["purpose"]);
     
-    // First get the session details
-    $session_query = "SELECT lab, purpose FROM sit_in_records WHERE id = ?";
-    $stmt = mysqli_prepare($con, $session_query);
-    mysqli_stmt_bind_param($stmt, "i", $session_id);
-    mysqli_stmt_execute($stmt);
-    $session_result = mysqli_stmt_get_result($stmt);
-    $session = mysqli_fetch_assoc($session_result);
-
-    if (!empty($subject) && !empty($message) && !empty($session['lab']) && !empty($session['purpose'])) {
-        $student_id = $_SESSION["username"];
+    if (!empty($subject) && !empty($message) && !empty($room) && !empty($purpose)) {
+        $username = $_SESSION["username"];
         
-        // Get actual student ID from username
+        // Get student ID from username
         $id_query = "SELECT IDNO FROM register WHERE USERNAME = ?";
         $stmt = mysqli_prepare($con, $id_query);
-        mysqli_stmt_bind_param($stmt, "s", $student_id);
+        mysqli_stmt_bind_param($stmt, "s", $username);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $row = mysqli_fetch_assoc($result);
         $student_id = $row['IDNO'];
 
-        // Insert feedback with session details
+        // Insert feedback with room and purpose
         $insert_query = "INSERT INTO feedback (student_id, subject, message, room, purpose) VALUES (?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($con, $insert_query);
-        mysqli_stmt_bind_param($stmt, "issss", $student_id, $subject, $message, $session['lab'], $session['purpose']);
+        mysqli_stmt_bind_param($stmt, "issss", $student_id, $subject, $message, $room, $purpose);
         
         if (mysqli_stmt_execute($stmt)) {
             echo json_encode(["success" => "Feedback submitted successfully"]);
