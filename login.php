@@ -49,6 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 header("refresh:2; url=admin_dashboard.php"); // Redirect after 2 seconds
             } else {
                 $_SESSION["username"] = $username;
+                $_SESSION["IDNO"] = $row["IDNO"];
                 echo "Login Successful! Redirecting...";
                 header("refresh:2; url=dashboard.php"); // Redirect after 2 seconds
             }
