@@ -541,10 +541,10 @@ $result = mysqli_query($con, $query);
                                     <td>
                                         <form method="POST" class="points-form">
                                             <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($row['IDNO']); ?>">
-                                            <input type="number" name="points" class="points-input" placeholder="Points" required min="1">
+                                            <input type="hidden" name="points" value="1">
                                             <button type="submit" name="update_points" class="btn btn-award">
                                                 <i class="fas fa-plus-circle"></i>
-                                                Award
+                                                Award 1 Point
                                             </button>
                                         </form>
                                     </td>

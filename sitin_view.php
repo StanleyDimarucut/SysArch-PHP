@@ -120,6 +120,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["start_session"])) {
     }
 }
 
+// Handle awarding a point
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["award_point"])) {
+    $student_id = $_POST["student_id"];
+    // Add 1 point
+    $update_query = "UPDATE register SET points = points + 1 WHERE IDNO = ?";
+    $stmt = mysqli_prepare($con, $update_query);
+    mysqli_stmt_bind_param($stmt, "s", $student_id);
+    mysqli_stmt_execute($stmt);
+
+    // Check if points is now a multiple of 3
+    $select_query = "SELECT points FROM register WHERE IDNO = ?";
+    $select_stmt = mysqli_prepare($con, $select_query);
+    mysqli_stmt_bind_param($select_stmt, "s", $student_id);
+    mysqli_stmt_execute($select_stmt);
+    $result = mysqli_stmt_get_result($select_stmt);
+    $row = mysqli_fetch_assoc($result);
+    $points = (int)$row['points'];
+
+    if ($points >= 3 && $points % 3 == 0) {
+        // Add 1 session (do NOT deduct points)
+        $convert_query = "UPDATE register SET remaining_sessions = remaining_sessions + 1 WHERE IDNO = ?";
+        $convert_stmt = mysqli_prepare($con, $convert_query);
+        mysqli_stmt_bind_param($convert_stmt, "s", $student_id);
+        mysqli_stmt_execute($convert_stmt);
+        header("Location: sitin_view.php?success=1+point+awarded+and+1+session+added");
+        exit();
+    } else {
+        header("Location: sitin_view.php?success=1+point+awarded");
+        exit();
+    }
+}
+
 // Query to get today's approved reservations that are not yet in sit_in_records
 $approved_reservations_query = "
     SELECT 
@@ -299,19 +331,19 @@ $approved_reservations_result = mysqli_query($con, $approved_reservations_query)
             color: white;
             border: none;
             border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 13px;
+            padding: 8px 20px;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 2px 8px rgba(220,53,69,0.08);
         }
-
         .btn-end-session:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(220,53,69,0.2);
+            box-shadow: 0 4px 12px rgba(220,53,69,0.15);
         }
 
         .alert {
@@ -338,19 +370,23 @@ $approved_reservations_result = mysqli_query($con, $approved_reservations_query)
         }
 
         .btn-approve {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
             color: #fff;
-            padding: 6px 16px;
             border: none;
-            border-radius: 5px;
-            font-weight: 600;
+            border-radius: 6px;
+            padding: 8px 20px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            margin: 0 2px;
-            font-size: 0.97rem;
-            transition: background 0.2s, color 0.2s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(40,167,69,0.08);
         }
         .btn-approve:hover {
-            background: #218838;
+            background: linear-gradient(135deg, #218838 0%, #28a745 100%);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.15);
         }
 
         @media (max-width: 768px) {
@@ -478,6 +514,28 @@ $approved_reservations_result = mysqli_query($con, $approved_reservations_query)
                 right: 18px;
             }
         }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .btn-end-session, .btn-approve {
+            min-width: 150px;
+            text-align: center;
+            font-size: 15px;
+            padding: 10px 0;
+        }
+        @media (max-width: 600px) {
+            .action-btns {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .btn-end-session, .btn-approve {
+                min-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -572,12 +630,20 @@ $approved_reservations_result = mysqli_query($con, $approved_reservations_query)
                             <td><?php echo htmlspecialchars($row['time_in']); ?></td>
                             <td><?php echo htmlspecialchars($row['remaining_sessions']); ?></td>
                             <td>
-                                <form method="POST">
-                                    <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($row['student_id']); ?>">
-                                    <button type="submit" name="end_session" class="btn-end-session">
-                                        <i class="fas fa-sign-out-alt"></i> End Session
-                                    </button>
-                                </form>
+                                <div class="action-btns">
+                                    <form method="POST" style="display:inline;">
+                                        <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($row['student_id']); ?>">
+                                        <button type="submit" name="end_session" class="btn-end-session">
+                                            <i class="fas fa-sign-out-alt"></i> End Session
+                                        </button>
+                                    </form>
+                                    <form method="POST" style="display:inline;">
+                                        <input type="hidden" name="student_id" value="<?php echo htmlspecialchars($row['student_id']); ?>">
+                                        <button type="submit" name="award_point" class="btn-approve" title="Award 1 point to this student" onclick="return confirm('Are you sure you want to award 1 point to this student?');">
+                                            <i class="fas fa-plus-circle"></i> Award 1 Point
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php } ?>

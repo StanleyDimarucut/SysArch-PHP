@@ -341,6 +341,7 @@ if ($notif_result) {
         <div>
             <a href="dashboard.php"><i class="fas fa-home"></i> Home</a>
             <a href="profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+            <a href="student_lab_schedule.php"><i class="fas fa-calendar-alt"></i> Lab Schedule</a>
             <a href="history.php"><i class="fas fa-history"></i> History</a>
             <a href="student_resources.php"><i class="fas fa-book"></i> Student Resources</a>
             <a href="Reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>

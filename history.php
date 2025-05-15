@@ -122,6 +122,27 @@ if (!empty($purpose_filter)) {
 mysqli_stmt_bind_param($stmt, $types, ...$params);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
+
+// Get the logged-in user's ID for notifications
+$user_id = $_SESSION['IDNO'] ?? ($_SESSION['user_id'] ?? null);
+$notif_result = false;
+if ($user_id) {
+    $notif_query = "SELECT * FROM notifications WHERE user_id = $user_id AND is_read = 0 ORDER BY created_at DESC";
+    $notif_result = mysqli_query($con, $notif_query);
+}
+
+$notif_count = 0;
+if ($notif_result) {
+    $notif_count = mysqli_num_rows($notif_result);
+}
+
+// Handle marking notification as read
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mark_read'], $_POST['notif_id'])) {
+    $notif_id = intval($_POST['notif_id']);
+    mysqli_query($con, "UPDATE notifications SET is_read = 1 WHERE id = $notif_id");
+    header('Location: history.php');
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -187,6 +208,92 @@ $result = mysqli_stmt_get_result($stmt);
 
         .navbar a.logout:hover {
             background: rgba(255,217,0,0.25);
+        }
+
+        .notification-bell {
+            position: relative;
+            display: inline-block;
+            margin-left: 18px;
+            cursor: pointer;
+            font-size: 22px;
+            color: #fff;
+            transition: color 0.2s;
+        }
+
+        .notification-bell:hover {
+            color: #ffd700;
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            background: #dc3545;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .notif-dropdown {
+            position: absolute;
+            right: 30px;
+            top: 60px;
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            border-radius: 8px;
+            min-width: 300px;
+            z-index: 2000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 16px 12px 12px 12px;
+        }
+
+        .notif-dropdown h4 {
+            margin: 0 0 10px 0;
+            color: #d48806;
+            font-size: 16px;
+        }
+
+        .notif-dropdown ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .notif-dropdown li {
+            margin-bottom: 8px;
+            font-size: 15px;
+            padding: 8px;
+            border-bottom: 1px solid #ffe58f;
+        }
+
+        .notif-dropdown li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-mark-read {
+            background: #1a5dba;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .btn-mark-read:hover {
+            background: #144c94;
+        }
+
+        @media (max-width: 1024px) {
+            .notification-bell {
+                top: 18px;
+                right: 18px;
+            }
         }
 
         .main-container {
@@ -332,11 +439,40 @@ $result = mysqli_stmt_get_result($stmt);
         <div>
             <a href="dashboard.php"><i class="fas fa-home"></i> Home</a>
             <a href="profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+            <a href="student_lab_schedule.php"><i class="fas fa-calendar-alt"></i> Lab Schedule</a>
             <a href="history.php"><i class="fas fa-history"></i> History</a>
             <a href="student_resources.php"><i class="fas fa-book"></i> Student Resources</a>
             <a href="Reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>
             <a href="login.php" class="logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
+        <div class="notification-bell" onclick="toggleNotifDropdown()">
+            <i class="fas fa-bell"></i>
+            <?php if ($notif_count > 0): ?>
+                <span class="notif-badge"><?php echo $notif_count; ?></span>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div id="notifDropdown" class="notif-dropdown" style="display:none;">
+        <h4>Notifications</h4>
+        <ul>
+            <?php
+            if ($notif_result && mysqli_num_rows($notif_result) > 0) {
+                mysqli_data_seek($notif_result, 0);
+                while($notif = mysqli_fetch_assoc($notif_result)): ?>
+                    <li>
+                        <?php echo htmlspecialchars($notif['message']); ?>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="notif_id" value="<?php echo $notif['id']; ?>">
+                            <button type="submit" name="mark_read" class="btn-mark-read">Mark as read</button>
+                        </form>
+                    </li>
+                <?php endwhile;
+            } else {
+                echo '<li>No new notifications.</li>';
+            }
+            ?>
+        </ul>
     </div>
 
     <div class="main-container">
@@ -446,6 +582,18 @@ $result = mysqli_stmt_get_result($stmt);
                 closeFeedbackModal();
             }
         }
+
+        function toggleNotifDropdown() {
+            var dropdown = document.getElementById('notifDropdown');
+            dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
+        }
+        document.addEventListener('click', function(event) {
+            var bell = document.querySelector('.notification-bell');
+            var dropdown = document.getElementById('notifDropdown');
+            if (!bell.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

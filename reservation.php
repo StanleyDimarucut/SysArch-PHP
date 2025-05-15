@@ -20,6 +20,26 @@ $course = $user_row['COURSE'];
 $year = $user_row['YEARLEVEL'];
 $profile_img = !empty($user_row['PROFILE_IMG']) ? htmlspecialchars($user_row['PROFILE_IMG']) : "images/default.jpg";
 
+// Get notifications for the user
+$notif_result = false;
+if ($user_id) {
+    $notif_query = "SELECT * FROM notifications WHERE user_id = $user_id AND is_read = 0 ORDER BY created_at DESC";
+    $notif_result = mysqli_query($con, $notif_query);
+}
+
+$notif_count = 0;
+if ($notif_result) {
+    $notif_count = mysqli_num_rows($notif_result);
+}
+
+// Handle marking notification as read
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mark_read'], $_POST['notif_id'])) {
+    $notif_id = intval($_POST['notif_id']);
+    mysqli_query($con, "UPDATE notifications SET is_read = 1 WHERE id = $notif_id");
+    header('Location: reservation.php');
+    exit();
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $room = mysqli_real_escape_string($con, $_POST['room']);
@@ -28,32 +48,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $time_in = mysqli_real_escape_string($con, $_POST['time_in']);
     $purpose = mysqli_real_escape_string($con, $_POST['purpose']);
 
-    // Check if PC is already reserved for the selected time
-    $check_query = "SELECT * FROM reservations 
-                   WHERE room = '$room' 
-                   AND pc_number = '$pc_number' 
-                   AND reservation_date = '$reservation_date' 
-                   AND time_in = '$time_in'";
-    
-    $check_result = mysqli_query($con, $check_query);
+    // Check if PC is in maintenance or in use
+    $pc_status_query = "SELECT status FROM pc_status WHERE room = '$room' AND pc_number = '$pc_number'";
+    $pc_status_result = mysqli_query($con, $pc_status_query);
+    $pc_status = mysqli_fetch_assoc($pc_status_result);
 
-    if (mysqli_num_rows($check_result) > 0) {
-        $message = "This PC is already reserved for the selected time.";
+    if ($pc_status && ($pc_status['status'] === 'maintenance' || $pc_status['status'] === 'in_use')) {
+        $message = "This PC is currently " . $pc_status['status'] . " and cannot be reserved.";
     } else {
-        // Insert new reservation
-        $insert_query = "INSERT INTO reservations (user_id, room, pc_number, reservation_date, time_in, purpose, status) 
-                        VALUES ('$user_id', '$room', '$pc_number', '$reservation_date', '$time_in', '$purpose', 'pending')";
-        
-        if (mysqli_query($con, $insert_query)) {
-            $message = "Reservation submitted successfully!";
-            
-            // Add notification for admin
-            $notif_msg = "A new reservation has been made by " . $_SESSION['username'];
-            $notif_query = "INSERT INTO notifications (user_id, message, for_admin) VALUES (0, '$notif_msg', 1)";
-            mysqli_query($con, $notif_query);
-            
+        // Check if lab is scheduled for maintenance or occupied
+        $lab_schedule_query = "SELECT status FROM lab_schedule 
+                             WHERE lab = '$room' 
+                             AND date = '$reservation_date' 
+                             AND time_slot = '$time_in'";
+        $lab_schedule_result = mysqli_query($con, $lab_schedule_query);
+        $lab_schedule = mysqli_fetch_assoc($lab_schedule_result);
+
+        if ($lab_schedule && ($lab_schedule['status'] === 'maintenance' || $lab_schedule['status'] === 'occupied')) {
+            $message = "The lab is scheduled for " . $lab_schedule['status'] . " during this time.";
         } else {
-            $message = "Error submitting reservation: " . mysqli_error($con);
+            // Check if PC is already reserved for the selected time
+            $check_query = "SELECT * FROM reservations 
+                           WHERE room = '$room' 
+                           AND pc_number = '$pc_number' 
+                           AND reservation_date = '$reservation_date' 
+                           AND time_in = '$time_in'";
+            
+            $check_result = mysqli_query($con, $check_query);
+
+            if (mysqli_num_rows($check_result) > 0) {
+                $message = "This PC is already reserved for the selected time.";
+            } else {
+                // Insert new reservation
+                $insert_query = "INSERT INTO reservations (user_id, room, pc_number, reservation_date, time_in, purpose, status) 
+                                VALUES ('$user_id', '$room', '$pc_number', '$reservation_date', '$time_in', '$purpose', 'pending')";
+                
+                if (mysqli_query($con, $insert_query)) {
+                    $message = "Reservation submitted successfully!";
+                    
+                    // Add notification for admin
+                    $notif_msg = "A new reservation has been made by " . $_SESSION['username'];
+                    $notif_query = "INSERT INTO notifications (user_id, message, for_admin) VALUES (0, '$notif_msg', 1)";
+                    mysqli_query($con, $notif_query);
+                    
+                } else {
+                    $message = "Error submitting reservation: " . mysqli_error($con);
+                }
+            }
         }
     }
 }
@@ -61,6 +102,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Get user's existing reservations
 $reservations_query = "SELECT * FROM reservations WHERE user_id = '$user_id' ORDER BY reservation_date DESC, time_in ASC";
 $reservations_result = mysqli_query($con, $reservations_query);
+
+// Get PC statuses for the selected room
+$selected_room = isset($_GET['room']) ? $_GET['room'] : '';
+$pc_status = array();
+
+if ($selected_room) {
+    $status_query = "SELECT pc_number, status FROM pc_status WHERE room = '$selected_room'";
+    $status_result = mysqli_query($con, $status_query);
+    while ($row = mysqli_fetch_assoc($status_result)) {
+        $pc_status[$row['pc_number']] = $row['status'];
+    }
+}
+
+// Get lab schedule for the selected date
+$selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$lab_schedule = array();
+
+if ($selected_room && $selected_date) {
+    $schedule_query = "SELECT time_slot, status FROM lab_schedule WHERE lab = '$selected_room' AND date = '$selected_date'";
+    $schedule_result = mysqli_query($con, $schedule_query);
+    while ($row = mysqli_fetch_assoc($schedule_result)) {
+        $lab_schedule[$row['time_slot']] = $row['status'];
+    }
+}
+
+// Add this after the existing PHP code, before the HTML
+// Define time slots
+$time_slots = [];
+$start = strtotime('08:00');
+$end = strtotime('21:00');
+for ($t = $start; $t < $end; $t += 3600) {
+    $time_slots[] = date('H:i:s', $t);
+}
 ?>
 
 <!DOCTYPE html>
@@ -83,12 +157,12 @@ $reservations_result = mysqli_query($con, $reservations_query);
             color: #1e293b;
         }
         .navbar {
-            background: linear-gradient(135deg, #144c94 0%, #1a5dba 100%);
+            background-color: #144c94;
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: fixed;
             top: 0;
             left: 0;
@@ -106,10 +180,9 @@ $reservations_result = mysqli_query($con, $reservations_query);
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255,255,255,0.1);
         }
         .navbar a:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.15);
             color: #ffd700;
             transform: translateY(-1px);
         }
@@ -120,6 +193,66 @@ $reservations_result = mysqli_query($con, $reservations_query);
         }
         .navbar a.logout:hover {
             background: rgba(255,217,0,0.25);
+        }
+        .notification-bell {
+            position: relative;
+            display: inline-block;
+            margin-left: 18px;
+            cursor: pointer;
+            font-size: 22px;
+            color: #fff;
+            transition: color 0.2s;
+        }
+        .notification-bell:hover {
+            color: #ffd700;
+        }
+        .notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            background: #dc3545;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .notif-dropdown {
+            position: absolute;
+            right: 30px;
+            top: 60px;
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            border-radius: 8px;
+            min-width: 300px;
+            z-index: 2000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 16px 12px 12px 12px;
+        }
+        .notif-dropdown h4 {
+            margin: 0 0 10px 0;
+            color: #d48806;
+            font-size: 16px;
+        }
+        .notif-dropdown ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .notif-dropdown li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        @media (max-width: 1024px) {
+            .navbar {
+                padding: 1rem;
+            }
+            .navbar a {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
         }
         .main-container {
             margin-top: 100px;
@@ -374,11 +507,40 @@ $reservations_result = mysqli_query($con, $reservations_query);
         <div>
             <a href="dashboard.php"><i class="fas fa-home"></i> Home</a>
             <a href="profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+            <a href="student_lab_schedule.php"><i class="fas fa-calendar-alt"></i> Lab Schedule</a>
             <a href="history.php"><i class="fas fa-history"></i> History</a>
-            <a href="student_resources.php"><i class="fas fa-book"></i>Student Resources</a>
-            <a href="reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>
+            <a href="student_resources.php"><i class="fas fa-book"></i> Student Resources</a>
+            <a href="Reservation.php"><i class="fas fa-calendar-plus"></i> Reservation</a>
             <a href="login.php" class="logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
         </div>
+        <div class="notification-bell" onclick="toggleNotifDropdown()">
+            <i class="fas fa-bell"></i>
+            <?php if ($notif_count > 0): ?>
+                <span class="notif-badge"><?php echo $notif_count; ?></span>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div id="notifDropdown" class="notif-dropdown" style="display:none;">
+        <h4>Notifications</h4>
+        <ul>
+            <?php
+            if ($notif_result && mysqli_num_rows($notif_result) > 0) {
+                mysqli_data_seek($notif_result, 0);
+                while($notif = mysqli_fetch_assoc($notif_result)): ?>
+                    <li>
+                        <?php echo htmlspecialchars($notif['message']); ?>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="notif_id" value="<?php echo $notif['id']; ?>">
+                            <button type="submit" name="mark_read" class="btn-mark-read">Mark as read</button>
+                        </form>
+                    </li>
+                <?php endwhile;
+            } else {
+                echo '<li>No new notifications.</li>';
+            }
+            ?>
+        </ul>
     </div>
     <div class="main-container">
         <div class="profile-bar">
@@ -390,7 +552,7 @@ $reservations_result = mysqli_query($con, $reservations_query);
         </div>
         <div class="card">
             <h2><i class="fas fa-desktop"></i> Make a Reservation</h2>
-            <?php if ($message): ?>
+            <?php if ($message && strpos($message, 'already reserved for the selected time') === false): ?>
                 <div class="message <?php echo strpos($message, 'successfully') !== false ? 'success' : 'error'; ?>">
                     <?php echo $message; ?>
                 </div>
@@ -500,13 +662,48 @@ $reservations_result = mysqli_query($con, $reservations_query);
             .then(response => response.json())
             .then(data => {
                 timeSelect.innerHTML = '<option value="">Select Time</option>';
-                if (data[room]) {
-                    Object.keys(data[room]).forEach(time => {
-                        const option = document.createElement('option');
-                        option.value = time;
-                        option.textContent = time;
-                        timeSelect.appendChild(option);
+                
+                // Define time slots
+                const timeSlots = [
+                    '08:00:00', '09:00:00', '10:00:00', '11:00:00', 
+                    '12:00:00', '13:00:00', '14:00:00', '15:00:00', 
+                    '16:00:00', '17:00:00', '18:00:00', '19:00:00', 
+                    '20:00:00'
+                ];
+
+                timeSlots.forEach(time => {
+                    const option = document.createElement('option');
+                    option.value = time;
+                    
+                    // Format time for display (e.g., "8:00 AM - 9:00 AM")
+                    const startTime = new Date(`2000-01-01T${time}`);
+                    const endTime = new Date(startTime.getTime() + 3600000); // Add 1 hour
+                    
+                    const formattedStart = startTime.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit', 
+                        hour12: true 
                     });
+                    const formattedEnd = endTime.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit', 
+                        hour12: true 
+                    });
+                    
+                    option.textContent = `${formattedStart} - ${formattedEnd}`;
+                    
+                    // Check if this time slot is available
+                    if (data[room] && data[room][time]) {
+                        timeSelect.appendChild(option);
+                    } else {
+                        option.disabled = true;
+                        option.textContent += ' (Not Available)';
+                        timeSelect.appendChild(option);
+                    }
+                });
+
+                // Update room status
+                if (Object.keys(data[room] || {}).length > 0) {
                     roomStatus.className = 'room-status available';
                     roomStatus.textContent = 'Room is available for selected date';
                 } else {
@@ -572,6 +769,47 @@ $reservations_result = mysqli_query($con, $reservations_query);
         document.getElementById('reservation_date').value = today;
         updateTimeSlots();
     });
+
+    function checkAvailability(room, pcNumber, date, time) {
+        // Check PC status
+        const pcStatus = <?php echo json_encode($pc_status); ?>;
+        if (pcStatus[pcNumber] === 'maintenance' || pcStatus[pcNumber] === 'in_use') {
+            alert('This PC is currently ' + pcStatus[pcNumber] + ' and cannot be reserved.');
+            return false;
+        }
+
+        // Check lab schedule
+        const labSchedule = <?php echo json_encode($lab_schedule); ?>;
+        if (labSchedule[time] === 'maintenance' || labSchedule[time] === 'occupied') {
+            alert('The lab is scheduled for ' + labSchedule[time] + ' during this time.');
+            return false;
+        }
+
+        return true;
+    }
+
+    document.getElementById('reservationForm').addEventListener('submit', function(e) {
+        const room = document.getElementById('room').value;
+        const pcNumber = document.getElementById('pc_number').value;
+        const date = document.getElementById('reservation_date').value;
+        const time = document.getElementById('time_in').value;
+
+        if (!checkAvailability(room, pcNumber, date, time)) {
+            e.preventDefault();
+        }
+    });
+
+    function toggleNotifDropdown() {
+        var dropdown = document.getElementById('notifDropdown');
+        dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
+    }
+    document.addEventListener('click', function(event) {
+        var bell = document.querySelector('.notification-bell');
+        var dropdown = document.getElementById('notifDropdown');
+        if (!bell.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
     </script>
 </body>
-</html> 
+</html>
