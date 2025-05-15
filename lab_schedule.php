@@ -307,8 +307,9 @@ foreach ($days as $day) {
             var newStatus = (status === 'available') ? 'occupied' : 'available';
             btn.setAttribute('data-status', newStatus);
             btn.className = 'slot-btn slot-' + newStatus;
-            btn.innerHTML = `<span class='dot ${newStatus}'></span> ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`;
-            var input = btn.parentElement.querySelector('input[type=\"hidden\"]');
+            let label = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            btn.innerHTML = `<span class='dot ${newStatus}'></span> ${label}`;
+            var input = btn.parentElement.querySelector('input[type="hidden"]');
             input.value = newStatus;
         });
     });
